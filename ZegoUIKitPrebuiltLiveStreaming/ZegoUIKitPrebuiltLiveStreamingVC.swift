@@ -53,6 +53,9 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     lazy var leaveButton: ZegoLeaveButton = {
         let button = ZegoLeaveButton()
+        if let confirmDialogInfo = self.config.confirmDialogInfo {
+            button.quitConfirmDialogInfo = confirmDialogInfo
+        }
         button.delegate = self.help
         button.iconLeave = ZegoUIKitLiveStreamIconSetType.top_close.load()
         return button
@@ -244,7 +247,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, AudioVideoViewDelegate, Z
         self.liveStreamingVC?.inputTextView.startEdit()
     }
     
-    //MARK: - LeaveButtonDelegate
+    //MARK: - LeaveButtonDelegate ZegoLiveStreamBottomBarDelegate
     func onLeaveButtonClick(_ isLeave: Bool) {
         if isLeave {
             self.liveStreamingVC?.dismiss(animated: true)

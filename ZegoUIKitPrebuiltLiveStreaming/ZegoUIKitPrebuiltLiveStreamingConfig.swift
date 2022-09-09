@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ZegoUIKitSDK
 
 @objcMembers
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
@@ -17,6 +18,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var showInRoomMessageButton: Bool = true
     public var menuBarButtons: [ZegoMenuBarButtonName] = [.switchCameraButton,.toggleMicrophoneButton,.toggleCameraButton]
     public var menuBarButtonsMaxCount: Int = 5
+    public var confirmDialogInfo: ZegoLeaveConfirmDialogInfo?
     
     public init(_ role: UInt) {
         if role == 0 || role == 2{

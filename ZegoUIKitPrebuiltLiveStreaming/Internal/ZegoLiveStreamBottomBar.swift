@@ -8,26 +8,31 @@
 import UIKit
 import ZegoUIKitSDK
 
-public protocol ZegoLiveStreamBottomBarDelegate: AnyObject {
+protocol ZegoLiveStreamBottomBarDelegate: AnyObject {
     func onMenuBarMoreButtonClick(_ buttonList: [UIView])
     func onInRoomMessageButtonClick()
+    func onLeaveButtonClick(_ isLeave: Bool)
 }
 
-public class ZegoLiveStreamBottomBar: UIView {
+extension ZegoLiveStreamBottomBarDelegate {
+    func onMenuBarMoreButtonClick(_ buttonList: [UIView]) { }
+    func onInRoomMessageButtonClick() { }
+    func onLeaveButtonClick(_ isLeave: Bool){ }
+}
 
-    public var userID: String?
-    public var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig(0) {
+class ZegoLiveStreamBottomBar: UIView {
+
+    var userID: String?
+    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig(0) {
         didSet {
             self.messageButton.isHidden = !config.showInRoomMessageButton
             self.barButtons = config.menuBarButtons
         }
     }
-    public weak var delegate: ZegoLiveStreamBottomBarDelegate?
+    weak var delegate: ZegoLiveStreamBottomBarDelegate?
     
     
     weak var showQuitDialogVC: UIViewController?
-    
-    private let help = ZegoLiveStreamBottomBar_Help()
     
     private var buttons: [UIView] = []
     private var moreButtonList: [UIView] = []
@@ -42,7 +47,7 @@ public class ZegoLiveStreamBottomBar: UIView {
     
     private lazy var messageButton: ZegoInRoomMessageButton = {
         let button = ZegoInRoomMessageButton()
-        button.delegate = self.help as? ZegoInRoomMessageButtonDelegate
+        button.delegate = self
         button.layer.masksToBounds = true
         button.layer.cornerRadius = itemSize.width * 0.5
         return button
@@ -52,7 +57,6 @@ public class ZegoLiveStreamBottomBar: UIView {
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        self.help.streamBottomBar = self
         self.backgroundColor = UIColor.clear
         self.addSubview(self.messageButton)
         self.createButton()
@@ -194,8 +198,8 @@ public class ZegoLiveStreamBottomBar: UIView {
                 }
             case .leaveButton:
                 let leaveButtonComponent: ZegoLeaveButton = ZegoLeaveButton()
-//                endButtonComponent.quitConfirmDialogInfo = self.config.hangUpConfirmDialogInfo ?? ZegoLeaveConfirmDialogInfo()
-//                endButtonComponent.delegate = self
+                leaveButtonComponent.delegate = self
+                leaveButtonComponent.quitConfirmDialogInfo = self.config.confirmDialogInfo ?? ZegoLeaveConfirmDialogInfo()
                 leaveButtonComponent.iconLeave = ZegoUIKitLiveStreamIconSetType.top_close.load()
                 if self.config.menuBarButtonsMaxCount < self.barButtons.count && index >= self.config.menuBarButtonsMaxCount {
                     self.moreButtonList.append(leaveButtonComponent)
@@ -226,11 +230,15 @@ class ZegoMoreButton: UIButton {
     }
 }
 
-class ZegoLiveStreamBottomBar_Help: NSObject, ZegoInRoomMessageButtonDelegate {
-    
-    fileprivate weak var streamBottomBar: ZegoLiveStreamBottomBar?
-    
+extension ZegoLiveStreamBottomBar: ZegoInRoomMessageButtonDelegate, LeaveButtonDelegate {
     func inRoomMessageButtonDidClick() {
-        self.streamBottomBar?.delegate?.onInRoomMessageButtonClick()
+        self.delegate?.onInRoomMessageButtonClick()
+    }
+    
+    func onLeaveButtonClick(_ isLeave: Bool) {
+        if isLeave {
+            self.showQuitDialogVC?.dismiss(animated: true, completion: nil)
+        }
+        self.delegate?.onLeaveButtonClick(isLeave)
     }
 }
