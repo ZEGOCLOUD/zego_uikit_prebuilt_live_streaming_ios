@@ -87,7 +87,7 @@ Pod::Spec.new do |spec|
   #  Not including the public_header_files will make all headers public.
   #
 
-  spec.source_files  = "ZegoUIKitPrebuiltLiveStreaming", "ZegoUIKitPrebuiltLiveStreaming/**/*.{h,m}"
+  spec.source_files  = "ZegoUIKitPrebuiltLiveStreaming","ZegoUIKitPrebuiltLiveStreaming/**/*.swift"
   spec.resource_bundle = {'ZegoUIKitPrebuiltLiveStreaming' => ['ZegoUIKitPrebuiltLiveStreaming/Resource/*.{xcassets}']}
   # spec.exclude_files = "Classes/Exclude"
 
