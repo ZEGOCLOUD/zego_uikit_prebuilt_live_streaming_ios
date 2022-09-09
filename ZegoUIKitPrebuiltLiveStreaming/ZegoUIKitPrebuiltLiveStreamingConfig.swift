@@ -11,7 +11,7 @@ import ZegoUIKitSDK
 @objcMembers
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     
-    public var showSoundWaveOnAudioView: Bool = true
+    public var showSoundWavesInAudioMode: Bool = true
     public var turnOnCameraWhenJoining: Bool = true
     public var turnOnMicrophoneWhenJoining: Bool = true
     public var useSpeakerWhenJoining: Bool = true
@@ -22,7 +22,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     
     public init(_ role: UInt) {
         if role == 0 || role == 2{
-            showSoundWaveOnAudioView = false
+            showSoundWavesInAudioMode = false
             turnOnCameraWhenJoining = false
             turnOnMicrophoneWhenJoining = false
             useSpeakerWhenJoining = true
@@ -30,7 +30,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
             menuBarButtons = []
             menuBarButtonsMaxCount = 5
         } else if role == 1 {
-            showSoundWaveOnAudioView = true
+            showSoundWavesInAudioMode = true
             turnOnCameraWhenJoining = true
             turnOnMicrophoneWhenJoining = true
             useSpeakerWhenJoining = true

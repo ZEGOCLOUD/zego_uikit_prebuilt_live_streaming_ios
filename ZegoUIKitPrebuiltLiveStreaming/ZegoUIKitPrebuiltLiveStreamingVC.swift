@@ -48,6 +48,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         let avView: ZegoAudioVideoView = ZegoAudioVideoView()
         avView.delegate = self.help
         avView.backgroundColor = UIColor.colorWithHexString("#4A4B4D")
+        avView.showVoiceWave = self.config.showSoundWavesInAudioMode
         return avView
     }()
     
@@ -122,7 +123,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.setupLayout()
     }
     
-    @objc public func addButtonToMenuBar(_ button: UIButton) {
+    @objc public func addButtonToBottomMenuBar(_ button: UIButton) {
         self.bottomBar.addButtonToMenuBar(button)
     }
     
