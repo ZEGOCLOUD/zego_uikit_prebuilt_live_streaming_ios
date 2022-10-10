@@ -17,6 +17,8 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     @objc public weak var delegate: ZegoUIKitPrebuiltLiveStreamingVCDelegate?
     
+    let inputViewHeight: CGFloat = 55
+    
     var userID: String?
     var userName: String?
     var liveID: String?
@@ -81,7 +83,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     lazy var inputTextView: ZegoInRoomMessageInput = {
         let messageInputView = ZegoInRoomMessageInput()
-        messageInputView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height, width: UIScreen.main.bounds.size.width, height: 45)
+        messageInputView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height, width: UIScreen.main.bounds.size.width, height: inputViewHeight)
         return messageInputView
     }()
     
@@ -141,9 +143,9 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             UIView.animate(withDuration: duration) {
                 self.view.layoutIfNeeded()
                 if margin > 0 {
-                    self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin - 45, width: UIScreen.main.bounds.size.width, height: 45)
+                    self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin - self.inputViewHeight, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
                 } else {
-                    self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin, width: UIScreen.main.bounds.size.width, height: 45)
+                    self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
                 }
                 
             }
