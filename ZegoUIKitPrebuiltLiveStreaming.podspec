@@ -131,6 +131,6 @@ Pod::Spec.new do |spec|
   spec.swift_versions = ['5.0']
 
   # spec.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
-  spec.dependency 'ZegoUIKit','1.1.0' 
+  spec.dependency 'ZegoUIKit' 
 
 end
