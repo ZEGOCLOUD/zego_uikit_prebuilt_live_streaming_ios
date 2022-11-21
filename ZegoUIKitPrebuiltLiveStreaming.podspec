@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "ZegoUIKitPrebuiltLiveStreaming"
-  spec.version      = "1.0.3"
+  spec.version      = "1.2.0"
   spec.summary      = "ZegoUIKitPrebuiltLiveStreaming iOS SDK."
 
   # This description is used to generate tags and improve search results.
@@ -88,7 +88,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.source_files  = "ZegoUIKitPrebuiltLiveStreaming","ZegoUIKitPrebuiltLiveStreaming/**/*.swift"
-  spec.resource_bundle = {'ZegoUIKitPrebuiltLiveStreaming' => ['ZegoUIKitPrebuiltLiveStreaming/Resource/*.{xcassets}']}
+  spec.resource_bundle = {'ZegoUIKitPrebuiltLiveStreaming' => ['ZegoUIKitPrebuiltLiveStreaming/Resource/*.{png}']}
   # spec.exclude_files = "Classes/Exclude"
 
   # spec.public_header_files = "Classes/**/*.h"
