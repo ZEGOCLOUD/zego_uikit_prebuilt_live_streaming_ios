@@ -712,7 +712,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         if liveStreamingVC.config.role == .host {
             liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: true)
         } else {
-            let dataDic: Dictionary? = data?.convertStringToDictionary()
+            let dataDic: Dictionary? = data?.live_convertStringToDictionary()
             let pluginInvitationID: String? = dataDic?["invitationID"] as? String
             guard let userID = inviter.userID else { return }
             if ZegoInvitationType(rawValue: type) == .removeCoHost {
@@ -746,7 +746,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         self.invitateAlter = alterView
         let cancelButton: UIAlertAction = UIAlertAction.init(title: cancelStr, style: .cancel) { action in
             let dataDict: [String : AnyObject] = ["invitationID": invitationID as AnyObject]
-            ZegoUIKitInvitationService.shared.refuseInvitation(inviterID, data: dataDict.jsonString)
+            ZegoUIKitInvitationService.shared.refuseInvitation(inviterID, data: dataDict.live_jsonString)
             liveStreamingVC.addOrRemoveAudienceReceiveInviteList(ZegoUIKitUser.init(inviterID, ""), isAdd: false)
         }
         
