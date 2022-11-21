@@ -73,7 +73,11 @@ extension Resource where Base: UIImage {
         guard let resourcePath: String = Bundle.main.resourcePath else { return nil }
         let bundlePath = resourcePath + pathComponent
         let bundle = Bundle(path: bundlePath)
-        return UIImage(named: name, in: bundle, compatibleWith: nil)
+        let scale = Int(UIScreen.main.scale)
+        let imageName = "\(name)\("@")\(scale)\("x")"
+        let imagePath = bundle?.path(forResource: imageName, ofType: "png")
+        guard let imagePath = imagePath else { return nil }
+        return UIImage.init(contentsOfFile: imagePath)
     }
 
 }

@@ -30,4 +30,12 @@ extension UIView {
         self.removeConstraints(self.constraints)
         self.translatesAutoresizingMaskIntoConstraints = true
     }
+    
+    func cornerCut(_ radius: Int, corner: UIRectCorner) {
+        let maskPath = UIBezierPath.init(roundedRect: bounds, byRoundingCorners: corner, cornerRadii: CGSize(width: radius, height: radius))
+        let maskLayer = CAShapeLayer()
+        maskLayer.frame = bounds
+        maskLayer.path = maskPath.cgPath
+        layer.mask = maskLayer
+    }
 }

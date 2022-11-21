@@ -90,7 +90,7 @@ class ZegoLiveStreamMoreView: UIViewController {
     }
     
     deinit {
-        print("CallMoreView deinit")
+        print("ZegoLiveStreamMoreView deinit")
     }
 
 }

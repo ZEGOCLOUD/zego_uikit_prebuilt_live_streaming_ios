@@ -20,6 +20,11 @@ func UIkitLiveAdaptLandscapeWidth(_ x: CGFloat) -> CGFloat {
 func UIkitLiveAdaptLandscapeHeight(_ x: CGFloat) -> CGFloat {
     return x * (UIkitLiveScreenHeight / 818.0)
 }
+
+func KeyWindow() -> UIWindow {
+    let window: UIWindow = UIApplication.shared.windows.filter({ $0.isKeyWindow }).last!
+    return window
+}
  
 
 enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
@@ -30,10 +35,15 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case icon_more_light
     case top_close
     case live_background_image
+    case bottombar_lianmai
+    case lianmai_more
+    case member_more
+    case icon_nav_flip
+    case icon_comeback
     
     // MARK: - Image handling
     func load() -> UIImage {
-        let image = UIImage.resource.loadImage(name: self.rawValue, bundleName: "ZegoUIKitPrebuiltLiveStream") ?? UIImage()
+        let image = UIImage.resource.loadImage(name: self.rawValue, bundleName: "ZegoUIKitPrebuiltLiveStreaming") ?? UIImage()
         return image
     }
 }
@@ -45,6 +55,19 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case toggleMicrophoneButton
     case switchCameraButton
     case swtichAudioOutputButton
+    case coHostControlButton
+}
+
+@objc public enum ZegoInvitationType: Int {
+    case requestCoHost = 2
+    case inviteToCoHost = 3
+    case removeCoHost = 4
+}
+
+@objc public enum ZegoLiveStreamingRole: Int {
+    case host = 0
+    case coHost = 1
+    case audience = 2
 }
 
 public let kRoleHost: UInt = 1
