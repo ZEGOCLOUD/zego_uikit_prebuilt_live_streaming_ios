@@ -49,7 +49,7 @@ class ZegoCoHostControlButton: UIView {
     
     var liveStatus: String = "0"
     
-    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience(nil) {
+    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience() {
         didSet {
             self.requestCoHostButton.setTitle(config.translationText.requestCoHostButton, for: .normal)
             self.cancelRequestButton.setTitle(config.translationText.cancelRequestCoHostButton, for: .normal)

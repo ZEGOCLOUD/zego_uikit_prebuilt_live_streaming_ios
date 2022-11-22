@@ -21,7 +21,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     var userID: String?
     var userName: String?
     var liveID: String?
-    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience(nil) {
+    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience() {
         didSet{
             self.bottomBar.config = config
             self.memberButton.config = config

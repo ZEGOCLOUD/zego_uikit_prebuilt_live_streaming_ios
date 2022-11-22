@@ -25,7 +25,7 @@ extension ZegoLiveStreamBottomBarDelegate {
 class ZegoLiveStreamBottomBar: UIView {
 
     var userID: String?
-    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience(nil) {
+    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience() {
         didSet {
             self.messageButton.isHidden = !config.bottomMenuBarConfig.showInRoomMessageButton
             if config.role == .host {

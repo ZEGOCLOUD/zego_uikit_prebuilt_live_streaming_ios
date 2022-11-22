@@ -33,7 +33,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
         bottomMenuBarConfig.audienceButtons = [.coHostControlButton]
     }
     
-    public static func host(_ plugins: [ZegoUIKitPlugin]?) -> ZegoUIKitPrebuiltLiveStreamingConfig {
+    public static func host(_ plugins: [ZegoUIKitPlugin] = []) -> ZegoUIKitPrebuiltLiveStreamingConfig {
         let config = ZegoUIKitPrebuiltLiveStreamingConfig()
         config.plugins = plugins
         config.role = .host
@@ -48,7 +48,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
         return config
     }
     
-    public static func audience(_ plugins: [ZegoUIKitPlugin]?) -> ZegoUIKitPrebuiltLiveStreamingConfig {
+    public static func audience(_ plugins: [ZegoUIKitPlugin] = []) -> ZegoUIKitPrebuiltLiveStreamingConfig {
         let config = ZegoUIKitPrebuiltLiveStreamingConfig()
         config.plugins = plugins
         config.role = .audience
