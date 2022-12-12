@@ -21,7 +21,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var plugins: [ZegoUIKitPlugin]? {
         didSet {
             if let plugins = plugins {
-                ZegoUIKitInvitationService.shared.installPlugins(plugins)
+                ZegoUIKitSignalingPluginImpl.shared.installPlugins(plugins)
             }
         }
     }
@@ -103,6 +103,6 @@ public class ZegoDialogInfo: NSObject {
 }
 
 public class ZegoPrebuiltAudioVideoViewConfig: NSObject {
-    var useVideoViewAspectFill: Bool = true
-    var showSoundWavesInAudioMode: Bool = true
+    public var useVideoViewAspectFill: Bool = true
+    public var showSoundWavesInAudioMode: Bool = true
 }
