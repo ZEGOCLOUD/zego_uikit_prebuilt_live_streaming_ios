@@ -30,6 +30,7 @@ func KeyWindow() -> UIWindow {
 enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     
     case bottom_message
+    case bottom_message_disable
     case top_people
     case icon_more
     case icon_more_light
@@ -40,6 +41,8 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case member_more
     case icon_nav_flip
     case icon_comeback
+    case icon_message_normal
+    case icon_message_disable
     
     // MARK: - Image handling
     func load() -> UIImage {
@@ -56,6 +59,7 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case switchCameraButton
     case swtichAudioOutputButton
     case coHostControlButton
+    case enableChatButton
 }
 
 @objc public enum ZegoInvitationType: Int {

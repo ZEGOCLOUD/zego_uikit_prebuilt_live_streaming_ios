@@ -12,6 +12,7 @@ import ZegoUIKitSDK
     @objc optional func getForegroundView(_ userInfo: ZegoUIKitUser?) -> UIView?
     @objc optional func onLeaveLiveStreaming()
     @objc optional func onLiveStreamingEnded()
+    @objc optional func onStartLiveButtonPressed()
 }
 
 public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
@@ -158,15 +159,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         return messageInputView
     }()
     
-    lazy var startLiveButton: UIButton = {
-        let button: UIButton = UIButton()
-        button.backgroundColor = UIColor.colorWithHexString("#A754FF")
-        button.setTitleColor(UIColor.colorWithHexString("#FFFFFF"), for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.setTitle(self.config.translationText.startLiveStreamingButton, for: .normal)
-        button.addTarget(self, action: #selector(startLiveClick), for: .touchUpInside)
-        return button
-    }()
+    var startLiveButton: ZegoStartLiveButton?
     
     lazy var headIconView: ZegoLiveHostHeaderView = {
         let iconView = ZegoLiveHostHeaderView()
@@ -209,13 +202,30 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.view.addSubview(self.messageView)
         self.view.addSubview(self.bottomBar)
         self.view.addSubview(self.inputTextView)
-        self.view.addSubview(self.startLiveButton)
         self.view.addSubview(self.backButton)
+        self.createNomalStartLiveButton()
+        if let startLiveButton = startLiveButton {
+            self.view.bringSubviewToFront(startLiveButton)
+        }
         self.memberButton.currentHost = self.currentHost
         self.setupLayout()
         self.setUIDisplayStatus()
         self.joinRoom()
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillChangeFrame(node:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+    
+    func createNomalStartLiveButton() {
+        let button: ZegoStartLiveButton = ZegoStartLiveButton()
+        button.delegate = self.help
+        button.backgroundColor = UIColor.colorWithHexString("#A754FF")
+        button.setTitleColor(UIColor.colorWithHexString("#FFFFFF"), for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        button.setTitle(self.config.translationText.startLiveStreamingButton, for: .normal)
+        button.addTarget(self, action: #selector(startLiveClick), for: .touchUpInside)
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = 22
+        self.startLiveButton = button
+        self.view.addSubview(self.startLiveButton!)
     }
     
     func setUIDisplayStatus() {
@@ -238,7 +248,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             }
         } else {
             self.switchCameraButton.isHidden = true
-            self.startLiveButton.isHidden = true
+            self.startLiveButton?.isHidden = true
             if self.currentHost == nil {
                 self.roomTipLabel.isHidden = false
                 self.headIconView.isHidden = true
@@ -264,6 +274,13 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     @objc public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
         self.bottomBar.addButtonToMenuBar(button, role: role)
+    }
+    
+    public func setStartLiveButton(_ button: ZegoStartLiveButton) {
+        self.startLiveButton?.removeFromSuperview()
+        self.startLiveButton = button
+        self.startLiveButton?.delegate = self.help
+        self.view.addSubview(self.startLiveButton!)
     }
     
     @objc func keyboardWillChangeFrame(node : Notification){
@@ -311,9 +328,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.redDot.layer.cornerRadius = 4
         self.bottomBar.frame = CGRect(x: 0, y: self.view.frame.size.height - 62, width: self.view.frame.size.width, height: 62)
         self.messageView.frame = CGRect(x: 16, y: self.view.frame.size.height - 62 - 200, width: UIkitLiveScreenWidth - 16 - 117, height: 200)
-        self.startLiveButton.frame = CGRect(x: (self.view.frame.size.width - 150) / 2, y: self.view.frame.size.height - 44 - 48.5, width: 150, height: 44)
-        self.startLiveButton.layer.masksToBounds = true
-        self.startLiveButton.layer.cornerRadius = 22
+        self.startLiveButton?.frame = CGRect(x: (self.view.frame.size.width - 150) / 2, y: self.view.frame.size.height - 44 - 48.5, width: 150, height: 44)
     }
     
     private func joinRoom() {
@@ -321,7 +336,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
               let userID = self.userID,
               let userName = self.userName
         else { return }
-        ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: liveID)
+        ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: liveID,markAsLargeRoom: self.config.markAsLargeRoom)
         if self.config.turnOnCameraWhenJoining || self.config.turnOnMicrophoneWhenJoining {
             self.requestCameraAndeMicPermission(true)
         }
@@ -365,7 +380,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     private func setStartLiveStatus() {
         self.liveStatus = "1"
         ZegoUIKit.shared.updateRoomProperties(["host": self.userID ?? "", "live_status": "1"], callback: nil)
-        self.startLiveButton.isHidden = true
+        self.startLiveButton?.isHidden = true
         self.bottomBar.isHidden = false
         self.setUIDisplayStatus()
     }
@@ -569,7 +584,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
 }
 
-class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate {
+class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate, ZegoStartLiveButtonDelegate {
     
     weak var liveStreamingVC: ZegoUIKitPrebuiltLiveStreamingVC?
     var shouldSortHostAtFirst: Bool = true
@@ -591,6 +606,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 liveStreamingVC.bottomBar.isHidden = true
             }
         }
+    }
+    
+    func onMeRemovedFromRoom() {
+        self.onLeaveButtonClick(true)
     }
     
     func onAudioVideoAvailable(_ userList: [ZegoUIKitUser]) {
@@ -693,6 +712,54 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             } else {
                 ZegoUIKit.shared.stopPlayingAllAudioVideo()
             }
+        }
+    }
+    
+    func onTurnOnYourCameraRequest(_ fromUser: ZegoUIKitUser) {
+        guard let liveStreamingVC = liveStreamingVC,
+              let userID = liveStreamingVC.userID
+        else { return }
+        if liveStreamingVC.config.needConfirmWhenOthersTurnOnYourCamera {
+            if let dialogInfo = liveStreamingVC.config.turnOnYourCameraConfirmDialogInfo {
+                let title = dialogInfo.title?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
+                let message = dialogInfo.message?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
+                let alterVC: UIAlertController = UIAlertController.init(title: title, message: message, preferredStyle: .alert)
+                let sureButton: UIAlertAction = UIAlertAction.init(title: dialogInfo.confirmButtonName, style: .default) { action in
+                    ZegoUIKit.shared.turnCameraOn(userID, isOn: true)
+                }
+                let refuseButton: UIAlertAction = UIAlertAction.init(title: dialogInfo.cancelButtonName, style: .cancel) { action in
+                    
+                }
+                alterVC.addAction(refuseButton)
+                alterVC.addAction(sureButton)
+                liveStreamingVC.present(alterVC, animated: false)
+            }
+        } else {
+            ZegoUIKit.shared.turnCameraOn(userID, isOn: true)
+        }
+    }
+    
+    func onTurnOnYourMicrophoneRequest(_ fromUser: ZegoUIKitUser) {
+        guard let liveStreamingVC = liveStreamingVC,
+              let userID = liveStreamingVC.userID
+        else { return }
+        if liveStreamingVC.config.needConfirmWhenOthersTurnOnYourMicrophone {
+            if let dialogInfo = liveStreamingVC.config.turnOnYourMicrophoneConfirmDialogInfo {
+                let title = dialogInfo.title?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
+                let message = dialogInfo.message?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
+                let alterVC: UIAlertController = UIAlertController.init(title: title, message: message, preferredStyle: .alert)
+                let sureButton: UIAlertAction = UIAlertAction.init(title: dialogInfo.confirmButtonName, style: .default) { action in
+                    ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: true)
+                }
+                let refuseButton: UIAlertAction = UIAlertAction.init(title: dialogInfo.cancelButtonName, style: .cancel) { action in
+                    
+                }
+                alterVC.addAction(refuseButton)
+                alterVC.addAction(sureButton)
+                liveStreamingVC.present(alterVC, animated: false)
+            }
+        } else {
+            ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: true)
         }
     }
     
@@ -986,6 +1053,13 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     func memberListDidClickRemoveCoHost(_ user: ZegoUIKitUser) {
         
+    }
+    
+    //MARK: - ZegoStartLiveButtonDelegate
+    func onStartLiveButtonPressed() {
+        guard let liveStreamingVC = liveStreamingVC else { return }
+        liveStreamingVC.startLiveClick()
+        liveStreamingVC.delegate?.onStartLiveButtonPressed?()
     }
 }
 

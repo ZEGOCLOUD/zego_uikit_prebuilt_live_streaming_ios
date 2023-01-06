@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "ZegoUIKitPrebuiltLiveStreaming"
-  spec.version      = "1.2.2"
+  spec.version      = "1.3.0"
   spec.summary      = "ZegoUIKitPrebuiltLiveStreaming iOS SDK."
 
   # This description is used to generate tags and improve search results.
@@ -52,7 +52,6 @@ Pod::Spec.new do |spec|
   #  profile URL.
   #
 
-  spec.author             = { "careyxi" => "careyxi@zego.im" }
   spec.author             = { "ZEGOCLOUND" => "zego.im" }
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -131,6 +130,6 @@ Pod::Spec.new do |spec|
   spec.swift_versions = ['5.0']
 
   # spec.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
-  spec.dependency 'ZegoUIKit','>= 1.7.0'
+  spec.dependency 'ZegoUIKit','>= 1.8.0'
 
 end

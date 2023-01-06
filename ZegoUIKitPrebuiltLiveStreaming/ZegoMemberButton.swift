@@ -107,9 +107,10 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                    let currentUserName = currentUser.userName
                 {
                     let newInviteCoHostButton = inviteCoHostButton.replacingOccurrences(of: "%@", with: currentUserName)
-                    return [newInviteCoHostButton,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    let removeUserInfo = self.memberButton?.config?.translationText.removeUserMenuDialogButton.replacingOccurrences(of: "%@", with: currentUserName) ?? ""
+                    return [newInviteCoHostButton,removeUserInfo,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
                 } else {
-                    return [self.memberButton?.config?.translationText.inviteCoHostButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    return [self.memberButton?.config?.translationText.inviteCoHostButton ?? "",self.memberButton?.config?.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
                 }
             }
         }
@@ -199,6 +200,12 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                         ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.inviteCoHostFailedToast ?? "", onView: self.memberButton?.controller?.view)
                     }
                 }
+            }
+        } else if index == 1 {
+            if isCoHost {
+                self.currentUser = nil
+            } else {
+                ZegoUIKit.shared.removeUserFromRoom([userID])
             }
         } else {
             self.currentUser = nil

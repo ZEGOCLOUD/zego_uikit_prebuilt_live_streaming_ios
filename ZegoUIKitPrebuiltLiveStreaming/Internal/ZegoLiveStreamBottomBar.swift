@@ -69,6 +69,7 @@ class ZegoLiveStreamBottomBar: UIView {
                     newButton.hostID = hostID
                 }
             }
+            self.messageButton.hostID = hostID
         }
     }
     
@@ -106,8 +107,6 @@ class ZegoLiveStreamBottomBar: UIView {
     private lazy var messageButton: ZegoInRoomMessageButton = {
         let button = ZegoInRoomMessageButton()
         button.delegate = self
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = itemSize.width * 0.5
         return button
     }()
     
@@ -329,9 +328,16 @@ class ZegoLiveStreamBottomBar: UIView {
                     self.buttons.append(coHostButton)
                     self.addSubview(coHostButton)
                 }
+            case .enableChatButton:
+                let enableChatButton: ZegoEnableChatButton = ZegoEnableChatButton()
+                if self.config.bottomMenuBarConfig.maxCount < self.barButtons.count && index >= self.config.bottomMenuBarConfig.maxCount {
+                    self.moreButtonList.append(enableChatButton)
+                } else {
+                    self.buttons.append(enableChatButton)
+                    self.addSubview(enableChatButton)
+                }
             }
         }
-        
         self.createExtendButton()
     }
     

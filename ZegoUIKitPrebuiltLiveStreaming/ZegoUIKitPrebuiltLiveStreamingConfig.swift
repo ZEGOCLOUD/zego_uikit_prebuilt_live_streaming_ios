@@ -12,12 +12,17 @@ import ZegoUIKitSDK
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     
     var role: ZegoLiveStreamingRole = .audience
+    public var markAsLargeRoom: Bool = false
     public var audioVideoViewConfig: ZegoPrebuiltAudioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig()
     public var turnOnCameraWhenJoining: Bool = false
     public var turnOnMicrophoneWhenJoining: Bool = false
     public var useSpeakerWhenJoining: Bool = true
+    public var needConfirmWhenOthersTurnOnYourCamera: Bool = true
+    public var needConfirmWhenOthersTurnOnYourMicrophone: Bool = true
     public var bottomMenuBarConfig: ZegoBottomMenuBarConfig = ZegoBottomMenuBarConfig()
     public var confirmDialogInfo: ZegoLeaveConfirmDialogInfo?
+    public var turnOnYourCameraConfirmDialogInfo: ZegoDialogInfo?
+    public var turnOnYourMicrophoneConfirmDialogInfo: ZegoDialogInfo?
     public var plugins: [ZegoUIKitPlugin]? {
         didSet {
             if let plugins = plugins {
@@ -80,6 +85,7 @@ public class ZegoTranslationText: NSObject {
     public var repeatInviteCoHostFailedToast:String = "You've sent the co-host invitation, please wait for confirmation."
     public var audienceRejectInvitationToast: String = "refused to be a co-host."
     public var requestCoHostFailed: String = "Failed to apply for connection."
+    public var removeUserMenuDialogButton: String = "remove %@ from the room"
     
     public var cameraPermissionSettingDialogInfo: ZegoDialogInfo = ZegoDialogInfo.init("Can not use Camera!", message: "Please enable camera access in the system settings!", cancelButtonName: "Cancel", confirmButtonName: "Settings")
     public var microphonePermissionSettingDialogInfo: ZegoDialogInfo = ZegoDialogInfo.init("Can not use Microphone!", message: "Please enable microphone access in the system settings!", cancelButtonName: "Cancel", confirmButtonName: "Settings")
@@ -94,7 +100,7 @@ public class ZegoDialogInfo: NSObject {
     public var cancelButtonName: String = "Cancel"
     public var confirmButtonName: String = "OK"
     
-    init(_ title: String, message: String, cancelButtonName: String = "Cancel", confirmButtonName: String = "OK") {
+    public init(_ title: String, message: String, cancelButtonName: String = "Cancel", confirmButtonName: String = "OK") {
         self.title = title
         self.message = message
         self.cancelButtonName = cancelButtonName
