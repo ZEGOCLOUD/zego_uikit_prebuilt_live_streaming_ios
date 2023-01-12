@@ -17,8 +17,8 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var turnOnCameraWhenJoining: Bool = false
     public var turnOnMicrophoneWhenJoining: Bool = false
     public var useSpeakerWhenJoining: Bool = true
-    public var needConfirmWhenOthersTurnOnYourCamera: Bool = true
-    public var needConfirmWhenOthersTurnOnYourMicrophone: Bool = true
+    public var canCameraTurnOnByOthers = false
+    public var canMicrophoneTurnOnByOthers = false
     public var bottomMenuBarConfig: ZegoBottomMenuBarConfig = ZegoBottomMenuBarConfig()
     public var confirmDialogInfo: ZegoLeaveConfirmDialogInfo?
     public var turnOnYourCameraConfirmDialogInfo: ZegoDialogInfo?

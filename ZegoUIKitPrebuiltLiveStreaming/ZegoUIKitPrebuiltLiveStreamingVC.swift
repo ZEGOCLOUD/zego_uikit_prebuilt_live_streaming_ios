@@ -221,7 +221,6 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         button.setTitleColor(UIColor.colorWithHexString("#FFFFFF"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         button.setTitle(self.config.translationText.startLiveStreamingButton, for: .normal)
-        button.addTarget(self, action: #selector(startLiveClick), for: .touchUpInside)
         button.layer.masksToBounds = true
         button.layer.cornerRadius = 22
         self.startLiveButton = button
@@ -719,7 +718,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         guard let liveStreamingVC = liveStreamingVC,
               let userID = liveStreamingVC.userID
         else { return }
-        if liveStreamingVC.config.needConfirmWhenOthersTurnOnYourCamera {
+        if liveStreamingVC.config.canCameraTurnOnByOthers {
             if let dialogInfo = liveStreamingVC.config.turnOnYourCameraConfirmDialogInfo {
                 let title = dialogInfo.title?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
                 let message = dialogInfo.message?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
@@ -733,9 +732,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 alterVC.addAction(refuseButton)
                 alterVC.addAction(sureButton)
                 liveStreamingVC.present(alterVC, animated: false)
+            } else {
+                ZegoUIKit.shared.turnCameraOn(userID, isOn: true)
             }
-        } else {
-            ZegoUIKit.shared.turnCameraOn(userID, isOn: true)
         }
     }
     
@@ -743,7 +742,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         guard let liveStreamingVC = liveStreamingVC,
               let userID = liveStreamingVC.userID
         else { return }
-        if liveStreamingVC.config.needConfirmWhenOthersTurnOnYourMicrophone {
+        if liveStreamingVC.config.canMicrophoneTurnOnByOthers {
             if let dialogInfo = liveStreamingVC.config.turnOnYourMicrophoneConfirmDialogInfo {
                 let title = dialogInfo.title?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
                 let message = dialogInfo.message?.replacingOccurrences(of: "%@", with: fromUser.userName ?? "")
@@ -757,9 +756,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 alterVC.addAction(refuseButton)
                 alterVC.addAction(sureButton)
                 liveStreamingVC.present(alterVC, animated: false)
+            } else {
+                ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: true)
             }
-        } else {
-            ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: true)
         }
     }
     
@@ -960,7 +959,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 guard let host = liveStreamingVC.currentHost else { return }
                 ZegoLiveStreamTipView.showTip(liveStreamingVC.config.translationText.sendRequestCoHostToast, onView: liveStreamingVC.view)
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: true)
-                ZegoUIKitSignalingPluginImpl.shared.sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil) { data in
+                ZegoUIKit.getSignalingPlugin().sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) { data in
                     guard let data = data else { return }
                     if data["code"] as! Int != 0 {
                         ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.requestCoHostFailed, onView: liveStreamingVC.view)

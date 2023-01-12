@@ -174,7 +174,7 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
         if index == 0 {
             //start invite user
             if isCoHost {
-                ZegoUIKitSignalingPluginImpl.shared.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.removeCoHost.rawValue, data: nil) { data in
+                ZegoUIKit.getSignalingPlugin().sendInvitation([userID], timeout: 60, type: ZegoInvitationType.removeCoHost.rawValue, data: nil, notificationConfig: nil) { data in
                     guard let data = data else { return }
                     if data["code"] as! Int == 0 {
                        
@@ -192,7 +192,7 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                         return
                     }
                 }
-                ZegoUIKitSignalingPluginImpl.shared.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.inviteToCoHost.rawValue, data: nil) { data in
+                ZegoUIKit.getSignalingPlugin().sendInvitation([userID], timeout: 60, type: ZegoInvitationType.inviteToCoHost.rawValue, data: nil, notificationConfig: nil) { data in
                     guard let data = data else { return }
                     if data["code"] as! Int == 0 {
                         memberButton.delegate?.memberListDidClickInvitate(currentUser)
