@@ -86,6 +86,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         layoutConfig.smallViewPostion = .bottomRight
         layoutConfig.smallViewSize = CGSize(width: 93, height: 124)
         layoutConfig.spacingBetweenSmallViews = 8
+        layoutConfig.removeViewWhenAudioVideoUnavailable = true
         let audioVideoViewConfig: ZegoAudioVideoViewConfig = ZegoAudioVideoViewConfig()
         audioVideoViewConfig.useVideoViewAspectFill = self.config.audioVideoViewConfig.useVideoViewAspectFill
         audioVideoViewConfig.showSoundWavesInAudioMode = self.config.audioVideoViewConfig.showSoundWavesInAudioMode
@@ -169,8 +170,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     @objc public init(_ appID: UInt32, appSign: String, userID: String, userName: String, liveID: String, config: ZegoUIKitPrebuiltLiveStreamingConfig) {
         super.init(nibName: nil, bundle: nil)
         ZegoUIKit.shared.initWithAppID(appID: appID, appSign: appSign)
-        ZegoUIKitSignalingPluginImpl.shared.initWithAppID(appID: appID, appSign: appSign)
-        ZegoUIKitSignalingPluginImpl.shared.login(userID, userName: userName, callback: nil)
+        if config.enableCoHosting {
+            ZegoUIKitSignalingPluginImpl.shared.initWithAppID(appID: appID, appSign: appSign)
+            ZegoUIKitSignalingPluginImpl.shared.login(userID, userName: userName, callback: nil)
+        }
         ZegoUIKit.shared.localUserInfo = ZegoUIKitUser.init(userID, userName)
         ZegoUIKit.shared.addEventHandler(self.help)
         self.userID = userID
@@ -858,7 +861,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     func onInvitationRefused(_ invitee: ZegoUIKitUser, data: String?) {
         guard let liveStreamingVC = liveStreamingVC else { return }
         if liveStreamingVC.config.role == .host {
-            ZegoLiveStreamTipView.showWarn(String(format: "%@ %@", invitee.userName ?? "",liveStreamingVC.config.translationText.audienceRejectInvitationToast), onView: liveStreamingVC.view)
+            let user: ZegoUIKitUser? = ZegoUIKit.shared.getUser(invitee.userID ?? "")
+            guard let user = user else { return }
+            ZegoLiveStreamTipView.showWarn(String(format: "%@ %@", user.userName ?? "",liveStreamingVC.config.translationText.audienceRejectInvitationToast), onView: liveStreamingVC.view)
             liveStreamingVC.addOrRmoveSeatListUser(invitee, isAdd: false)
             liveStreamingVC.addOrRemoveHostInviteList(invitee, isAdd: false)
         } else {
@@ -959,7 +964,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 guard let host = liveStreamingVC.currentHost else { return }
                 ZegoLiveStreamTipView.showTip(liveStreamingVC.config.translationText.sendRequestCoHostToast, onView: liveStreamingVC.view)
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: true)
-                ZegoUIKit.getSignalingPlugin().sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                ZegoUIKitSignalingPluginImpl.shared.sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) { data in
                     guard let data = data else { return }
                     if data["code"] as! Int != 0 {
                         ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.requestCoHostFailed, onView: liveStreamingVC.view)

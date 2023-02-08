@@ -34,10 +34,12 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
                 //is self
                 self.moreButton.isHidden = true
             } else {
-                self.moreButton.isHidden = false
+                self.moreButton.isHidden = enableCoHosting ? false : true
             }
         }
     }
+    
+    var enableCoHosting: Bool = true
     
     var currentHost: ZegoUIKitUser?
     
@@ -184,7 +186,7 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
                 self.agreeButton.isHidden = true
                 self.disAgreeButton.isHidden = true
             } else if isCoHost {
-                self.moreButton.isHidden = false
+                self.moreButton.isHidden = enableCoHosting ? false : true
                 self.agreeButton.isHidden = true
                 self.disAgreeButton.isHidden = true
                 
@@ -193,7 +195,7 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
                 self.agreeButton.isHidden = false
                 self.disAgreeButton.isHidden = false
             } else {
-                self.moreButton.isHidden = false
+                self.moreButton.isHidden = enableCoHosting ? false : true
                 self.agreeButton.isHidden = true
                 self.disAgreeButton.isHidden = true
             }

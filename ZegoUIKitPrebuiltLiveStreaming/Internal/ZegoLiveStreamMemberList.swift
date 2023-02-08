@@ -141,6 +141,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
     func getMemberListItemView(_ tableView: UITableView, indexPath: IndexPath, userInfo: ZegoUIKitUser) -> UITableViewCell? {
         let cell: ZegoLiveStreamMemberListCell = tableView.dequeueReusableCell(withIdentifier: "ZegoLiveStreamMemberListCell") as! ZegoLiveStreamMemberListCell
         cell.selectionStyle = .none
+        cell.enableCoHosting = self.config?.enableCoHosting ?? true
         cell.delegate = self
         cell.user = userInfo
         cell.currentHost = self.currentHost

@@ -23,14 +23,8 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var confirmDialogInfo: ZegoLeaveConfirmDialogInfo?
     public var turnOnYourCameraConfirmDialogInfo: ZegoDialogInfo?
     public var turnOnYourMicrophoneConfirmDialogInfo: ZegoDialogInfo?
-    public var plugins: [ZegoUIKitPlugin]? {
-        didSet {
-            if let plugins = plugins {
-                ZegoUIKitSignalingPluginImpl.shared.installPlugins(plugins)
-            }
-        }
-    }
     public var translationText: ZegoTranslationText = ZegoTranslationText()
+    public var enableCoHosting: Bool = true
     
     public override init() {
         bottomMenuBarConfig.hostButtons = [.switchCameraButton,.toggleMicrophoneButton,.toggleCameraButton]
@@ -38,10 +32,10 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
         bottomMenuBarConfig.audienceButtons = [.coHostControlButton]
     }
     
-    public static func host(_ plugins: [ZegoUIKitPlugin] = []) -> ZegoUIKitPrebuiltLiveStreamingConfig {
+    public static func host(enableCoHosting: Bool = false) -> ZegoUIKitPrebuiltLiveStreamingConfig {
         let config = ZegoUIKitPrebuiltLiveStreamingConfig()
-        config.plugins = plugins
         config.role = .host
+        config.enableCoHosting = enableCoHosting
         config.turnOnCameraWhenJoining = true
         config.turnOnMicrophoneWhenJoining = true
         let leaveDiaglog = ZegoLeaveConfirmDialogInfo()
@@ -53,10 +47,10 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
         return config
     }
     
-    public static func audience(_ plugins: [ZegoUIKitPlugin] = []) -> ZegoUIKitPrebuiltLiveStreamingConfig {
+    public static func audience(enableCoHosting: Bool = false) -> ZegoUIKitPrebuiltLiveStreamingConfig {
         let config = ZegoUIKitPrebuiltLiveStreamingConfig()
-        config.plugins = plugins
         config.role = .audience
+        config.enableCoHosting = enableCoHosting
         return config
     }
 }

@@ -31,9 +31,17 @@ class ZegoLiveStreamBottomBar: UIView {
             if config.role == .host {
                 self.barButtons = config.bottomMenuBarConfig.hostButtons
             } else if config.role == .coHost {
-                self.barButtons = config.bottomMenuBarConfig.coHostButtons
+                if config.enableCoHosting {
+                    self.barButtons = config.bottomMenuBarConfig.coHostButtons
+                } else {
+                    self.barButtons = config.bottomMenuBarConfig.coHostButtons.filter({$0 != .coHostControlButton})
+                }
             } else {
-                self.barButtons = config.bottomMenuBarConfig.audienceButtons
+                if config.enableCoHosting {
+                    self.barButtons = config.bottomMenuBarConfig.audienceButtons
+                } else {
+                    self.barButtons = config.bottomMenuBarConfig.audienceButtons.filter({$0 != .coHostControlButton})
+                }
             }
         }
     }
