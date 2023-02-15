@@ -9,7 +9,7 @@ import UIKit
 import ZegoUIKitSDK
 
 @objc public protocol ZegoUIKitPrebuiltLiveStreamingVCDelegate: AnyObject {
-    @objc optional func getForegroundView(_ userInfo: ZegoUIKitUser?) -> UIView?
+    @objc optional func getForegroundView(_ userInfo: ZegoUIKitUser?) -> ZegoBaseAudioVideoForegroundView?
     @objc optional func onLeaveLiveStreaming()
     @objc optional func onLiveStreamingEnded()
     @objc optional func onStartLiveButtonPressed()
@@ -57,6 +57,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         didSet {
             self.bottomBar.liveStatus = liveStatus
             self.audioVideoContainer.view.isHidden = (liveStatus == "1" || self.config.role == .host) ? false : true
+            self.backgroundView.liveStatus = liveStatus
         }
     }
     
@@ -77,6 +78,11 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         label.textColor = UIColor.colorWithHexString("#FFFFFF")
         label.font = UIFont.systemFont(ofSize: 14)
         return label
+    }()
+    
+    lazy var backgroundView: ZegoLiveStreamingBackGroundView = {
+        let view = ZegoLiveStreamingBackGroundView()
+        return view
     }()
     
     lazy var audioVideoContainer: ZegoAudioVideoContainer = {
@@ -174,7 +180,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             ZegoUIKitSignalingPluginImpl.shared.initWithAppID(appID: appID, appSign: appSign)
             ZegoUIKitSignalingPluginImpl.shared.login(userID, userName: userName, callback: nil)
         }
-        ZegoUIKit.shared.localUserInfo = ZegoUIKitUser.init(userID, userName)
+//        ZegoUIKit.shared.localUserInfo = ZegoUIKitUser.init(userID, userName)
         ZegoUIKit.shared.addEventHandler(self.help)
         self.userID = userID
         self.userName = userName
@@ -183,6 +189,8 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         if config.role == .host {
             self.currentHost = ZegoUIKitUser.init(userID, userName)
         }
+        self.backgroundView.config = config
+        self.backgroundView.liveStatus = liveStatus
         self.help.liveStreamingVC = self
     }
     
@@ -195,9 +203,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         // Do any additional setup after loading the view.
         self.view.backgroundColor = UIColor.white
         self.view.addSubview(self.audioVideoContainer.view)
-        self.view.addSubview(self.backgroundImageView)
+        self.view.addSubview(self.backgroundView)
+//        self.view.addSubview(self.backgroundImageView)
         self.view.addSubview(self.switchCameraButton)
-        self.view.addSubview(self.roomTipLabel)
+//        self.view.addSubview(self.roomTipLabel)
         self.view.addSubview(self.headIconView)
         self.view.addSubview(self.leaveButton)
         self.view.addSubview(self.memberButton)
@@ -232,8 +241,8 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     func setUIDisplayStatus() {
         if self.config.role == .host {
-            self.backgroundImageView.isHidden = true
-            self.roomTipLabel.isHidden = true
+//            self.backgroundImageView.isHidden = true
+//            self.roomTipLabel.isHidden = true
             self.headIconView.host = ZegoUIKit.shared.localUserInfo
             if liveStatus == "1" {
                 self.switchCameraButton.isHidden = true
@@ -252,14 +261,14 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             self.switchCameraButton.isHidden = true
             self.startLiveButton?.isHidden = true
             if self.currentHost == nil {
-                self.roomTipLabel.isHidden = false
+//                self.roomTipLabel.isHidden = false
                 self.headIconView.isHidden = true
             } else {
-                if liveStatus == "1" {
-                    self.roomTipLabel.isHidden = true
-                } else {
-                    self.roomTipLabel.isHidden = false
-                }
+//                if liveStatus == "1" {
+//                    self.roomTipLabel.isHidden = true
+//                } else {
+//                    self.roomTipLabel.isHidden = false
+//                }
                 self.headIconView.isHidden = false
             }
             self.memberButton.isHidden = false
@@ -309,9 +318,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     private func setupLayout() {
         self.audioVideoContainer.view.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
-        self.backgroundImageView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
-        self.roomTipLabel.center = CGPoint(x: self.view.bounds.size.width * 0.5, y: self.view.bounds.size.height * 0.5)
-        self.roomTipLabel.bounds = CGRect(x: 0, y: 0, width: 180, height: 50)
+        self.backgroundView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
+//        self.backgroundImageView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
+//        self.roomTipLabel.center = CGPoint(x: self.view.bounds.size.width * 0.5, y: self.view.bounds.size.height * 0.5)
+//        self.roomTipLabel.bounds = CGRect(x: 0, y: 0, width: 180, height: 50)
         self.headIconView.frame = CGRect(x: 16, y: 53, width: 105, height: 34)
         self.headIconView.layer.masksToBounds = true
         self.headIconView.layer.cornerRadius = 17
@@ -355,11 +365,15 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.bottomBar.clearBottomBarExtendButtons(role)
     }
     
-    func updateHostProporty(_ isHost: Bool) {
-        self.config.role = .audience
-        //update UI
-        self.setUIDisplayStatus()
+    public func setBackgroundView(_ view: UIView) {
+        self.backgroundView.setCustomBackGroundView(view: view)
     }
+    
+//    func updateHostProporty(_ isHost: Bool) {
+//        self.config.role = .audience
+//        //update UI
+//        self.setUIDisplayStatus()
+//    }
     
     @objc func startLiveClick() {
         //Check the permissions
@@ -680,10 +694,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             guard let live_status = properties["live_status"] else { return }
             liveStreamingVC.liveStatus = live_status
             if live_status == "1" {
-                self.liveStreamingVC?.roomTipLabel.isHidden = true
+//                self.liveStreamingVC?.roomTipLabel.isHidden = true
             } else {
-                self.liveStreamingVC?.roomTipLabel.isHidden = false
-                self.liveStreamingVC?.backgroundImageView.isHidden = false
+//                self.liveStreamingVC?.roomTipLabel.isHidden = false
+//                self.liveStreamingVC?.backgroundImageView.isHidden = false
                 liveStreamingVC.coHostList.removeAll()
                 liveStreamingVC.memberButton.coHostList = liveStreamingVC.memberButton.coHostList
             }
@@ -709,7 +723,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 }
                 ZegoUIKit.shared.stopPlayingAllAudioVideo()
             } else if newValue == "1" {
-                self.liveStreamingVC?.backgroundImageView.isHidden = true
+//                self.liveStreamingVC?.backgroundImageView.isHidden = true
                 ZegoUIKit.shared.startPlayingAllAudioVideo()
             } else {
                 ZegoUIKit.shared.stopPlayingAllAudioVideo()
@@ -906,12 +920,12 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     
     //MARK: -ZegoAudioVideoContainerDelegate
-    func getForegroundView(_ userInfo: ZegoUIKitUser?) -> UIView? {
+    func getForegroundView(_ userInfo: ZegoUIKitUser?) -> ZegoBaseAudioVideoForegroundView? {
         if let foregroundView = self.liveStreamingVC?.delegate?.getForegroundView?(userInfo) {
             return foregroundView
         } else {
             // user nomal foregroundView
-            let nomalForegroundView: ZegoLiveNomalForegroundView = ZegoLiveNomalForegroundView.init(frame: .zero)
+            let nomalForegroundView: ZegoLiveNomalForegroundView = ZegoLiveNomalForegroundView(frame: .zero, userID: userInfo?.userID, delegate: nil)
             nomalForegroundView.userInfo = userInfo
             return nomalForegroundView
         }

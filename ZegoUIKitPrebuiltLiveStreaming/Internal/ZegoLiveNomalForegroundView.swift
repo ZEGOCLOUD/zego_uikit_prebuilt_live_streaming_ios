@@ -8,7 +8,7 @@
 import UIKit
 import ZegoUIKitSDK
 
-class ZegoLiveNomalForegroundView: UIView {
+class ZegoLiveNomalForegroundView: ZegoBaseAudioVideoForegroundView {
     
     let userNameLabel: UILabel = UILabel()
     let micStateIcon: ZegoMicrophoneStateIcon = ZegoMicrophoneStateIcon(frame: .zero)
@@ -43,9 +43,8 @@ class ZegoLiveNomalForegroundView: UIView {
         }
     }
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        ZegoUIKit.shared.addEventHandler(self)
+    override init(frame: CGRect, userID: String?, delegate: ZegoBaseAudioVideoForegroundViewDelegate?) {
+        super.init(frame: frame, userID: userID, delegate: delegate)
         self.addSubview(self.bottomView)
     }
     
@@ -95,15 +94,9 @@ class ZegoLiveNomalForegroundView: UIView {
         return labelSize.width
     }
     
-}
-
-extension ZegoLiveNomalForegroundView: ZegoUIKitEventHandle {
-    
-    func onMicrophoneOn(_ user: ZegoUIKitUser, isOn: Bool) {
+    override func onMicrophoneOn(_ user: ZegoUIKitUser, isOn: Bool) {
         if user.userID == self.userInfo?.userID {
             self.setupLayOut()
         }
     }
-
-    
 }

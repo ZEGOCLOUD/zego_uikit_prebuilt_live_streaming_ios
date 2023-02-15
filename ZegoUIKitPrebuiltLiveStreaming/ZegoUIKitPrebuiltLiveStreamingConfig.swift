@@ -72,7 +72,7 @@ public class ZegoTranslationText: NSObject {
     public var cancelMenuDialogButton: String = "Cancel"
     public var noHostOnline: String = "No host is online."
     public var inviteCoHostButton: String = "Invite %@ to co-host"
-    public var memberListTitle: String = "Attendance"
+    public var memberListTitle: String = "Audience"
     public var sendRequestCoHostToast: String = "You are applying to be a co-host, please wait for confirmation."
     public var hostRejectCoHostRequestToast: String = "Your request to co-host with the host has been refused."
     public var inviteCoHostFailedToast: String = "Failed to connect with the co-host，please try again."

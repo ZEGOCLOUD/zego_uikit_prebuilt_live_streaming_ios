@@ -162,7 +162,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
         label.frame = CGRect(x: 16, y: 26, width: 150, height: 22)
         label.textColor = UIColor.white
         label.font = UIFont.systemFont(ofSize: 16)
-        label.text = String(format: "%@·%d", self.translationText?.memberListTitle ?? "Attendance",ZegoUIKit.shared.getAllUsers().count)
+        label.text = String(format: "%@·%d", self.translationText?.memberListTitle ?? "Audience",ZegoUIKit.shared.getAllUsers().count)
         view.addSubview(label)
         return view
     }
