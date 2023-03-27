@@ -88,15 +88,27 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     lazy var audioVideoContainer: ZegoAudioVideoContainer = {
         let container = ZegoAudioVideoContainer()
         container.delegate = self.help
-        let layoutConfig = ZegoLayoutPictureInPictureConfig()
-        layoutConfig.smallViewPostion = .bottomRight
-        layoutConfig.smallViewSize = CGSize(width: 93, height: 124)
-        layoutConfig.spacingBetweenSmallViews = 8
-        layoutConfig.removeViewWhenAudioVideoUnavailable = true
+        
         let audioVideoViewConfig: ZegoAudioVideoViewConfig = ZegoAudioVideoViewConfig()
         audioVideoViewConfig.useVideoViewAspectFill = self.config.audioVideoViewConfig.useVideoViewAspectFill
         audioVideoViewConfig.showSoundWavesInAudioMode = self.config.audioVideoViewConfig.showSoundWavesInAudioMode
-        container.setLayout(.pictureInPicture, config: layoutConfig, audioVideoConfig: audioVideoViewConfig)
+        
+        if let layout = config.layout {
+            if layout.config is ZegoLayoutGalleryConfig {
+                let galleryConfig = layout.config as! ZegoLayoutGalleryConfig
+                container.setLayout(layout.mode, config: galleryConfig, audioVideoConfig: audioVideoViewConfig)
+            } else if layout.config is ZegoLayoutPictureInPictureConfig {
+                let pipConfig = layout.config as! ZegoLayoutPictureInPictureConfig
+                container.setLayout(layout.mode, config: pipConfig, audioVideoConfig: audioVideoViewConfig)
+            }
+        } else {
+            let layoutConfig = ZegoLayoutPictureInPictureConfig()
+            layoutConfig.smallViewPostion = .bottomRight
+            layoutConfig.smallViewSize = CGSize(width: 93, height: 124)
+            layoutConfig.spacingBetweenSmallViews = 8
+            layoutConfig.removeViewWhenAudioVideoUnavailable = true
+            container.setLayout(.pictureInPicture, config: layoutConfig, audioVideoConfig: audioVideoViewConfig)
+        }
         container.view.backgroundColor = UIColor.colorWithHexString("#4A4B4D")
         return container
     }()
@@ -1022,7 +1034,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         alterView.addAction(sureButton)
         liveStreamingVC.present(alterView, animated: false, completion: nil)
     }
-    
+
     //MARK: - LeaveButtonDelegate ZegoLiveStreamBottomBarDelegate
     func onLeaveButtonClick(_ isLeave: Bool) {
         guard let liveStreamingVC = liveStreamingVC else { return }

@@ -105,5 +105,9 @@ class ZegoLiveStreamingBackGroundView: UIView {
         self.roomTipLabel.removeFromSuperview()
         self.addSubview(view)
     }
+    
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        return nil
+    }
 
 }

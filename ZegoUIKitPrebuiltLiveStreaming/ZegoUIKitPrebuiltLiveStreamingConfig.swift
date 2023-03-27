@@ -25,6 +25,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var turnOnYourMicrophoneConfirmDialogInfo: ZegoDialogInfo?
     public var translationText: ZegoTranslationText = ZegoTranslationText()
     public var enableCoHosting: Bool = true
+    public var layout: ZegoLayout?
     
     public override init() {
         bottomMenuBarConfig.hostButtons = [.switchCameraButton,.toggleMicrophoneButton,.toggleCameraButton]
