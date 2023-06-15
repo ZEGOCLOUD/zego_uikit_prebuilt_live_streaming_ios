@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZegoUIKitSDK
+import ZegoUIKit
 
 @objc public protocol ZegoInRoomMessageButtonDelegate: AnyObject {
     func inRoomMessageButtonDidClick()

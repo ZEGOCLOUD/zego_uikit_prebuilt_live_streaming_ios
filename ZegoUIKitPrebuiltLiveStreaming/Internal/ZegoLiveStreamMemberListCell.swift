@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZegoUIKitSDK
+import ZegoUIKit
 
 protocol ZegoLiveStreamMemberListCellDelegate: AnyObject {
     func moreButtonDidClick(_ user: ZegoUIKitUser)

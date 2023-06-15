@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZegoUIKitSDK
+import ZegoUIKit
 
 protocol ZegoMemberButtonDelegate: AnyObject {
     func memberListDidClickAgree(_ user: ZegoUIKitUser)

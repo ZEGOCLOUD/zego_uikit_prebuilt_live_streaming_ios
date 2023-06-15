@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZegoUIKitSDK
+import ZegoUIKit
 
 @objcMembers
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {

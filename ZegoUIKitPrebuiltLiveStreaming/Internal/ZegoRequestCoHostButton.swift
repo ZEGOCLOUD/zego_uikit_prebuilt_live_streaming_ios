@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZegoUIKitSDK
+import ZegoUIKit
 
 protocol ZegoRequestCoHostButtonDelegate: AnyObject {
     func requestCoHostButtonDidClick()

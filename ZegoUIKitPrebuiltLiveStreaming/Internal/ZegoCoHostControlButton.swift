@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZegoUIKitSDK
+import ZegoUIKit
 
 enum CoHostControlButtonType: Int {
     case requestCoHost
