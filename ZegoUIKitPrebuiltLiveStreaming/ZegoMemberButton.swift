@@ -109,9 +109,18 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                 {
                     let newInviteCoHostButton = inviteCoHostButton.replacingOccurrences(of: "%@", with: currentUserName)
                     let removeUserInfo = self.memberButton?.config?.translationText.removeUserMenuDialogButton.replacingOccurrences(of: "%@", with: currentUserName) ?? ""
-                    return [newInviteCoHostButton,removeUserInfo,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    if ZegoLiveStreamingManager.shared.pkState == .isStartPK {
+                        return [removeUserInfo,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    } else {
+                        return [newInviteCoHostButton,removeUserInfo,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    }
                 } else {
-                    return [self.memberButton?.config?.translationText.inviteCoHostButton ?? "",self.memberButton?.config?.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    if ZegoLiveStreamingManager.shared.pkState == .isStartPK {
+                        return [self.memberButton?.config?.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    } else {
+                        return [self.memberButton?.config?.translationText.inviteCoHostButton ?? "",self.memberButton?.config?.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                    }
+                    
                 }
             }
         }
@@ -174,40 +183,52 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
         }
         if index == 0 {
             //start invite user
-            if isCoHost {
-                ZegoUIKitSignalingPluginImpl.shared.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.removeCoHost.rawValue, data: nil, notificationConfig: nil) { data in
-                    guard let data = data else { return }
-                    if data["code"] as! Int == 0 {
-                       
-                    } else {
-                        
-                    }
+            if ZegoLiveStreamingManager.shared.pkState == .isStartPK {
+                if isCoHost {
+                    self.currentUser = nil
+                } else {
+                    ZegoUIKit.shared.removeUserFromRoom([userID])
                 }
-                memberButton.delegate?.memberListDidClickRemoveCoHost(currentUser)
             } else {
-                if let hostInviteList = self.memberButton?.hostInviteList {
-                    if hostInviteList.contains(where: {
-                        return $0.userID == userID
-                    }) {
-                        ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.repeatInviteCoHostFailedToast ?? "", onView: memberButton.controller?.view)
-                        return
+                if isCoHost {
+                    ZegoUIKitSignalingPluginImpl.shared.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.removeCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                        guard let data = data else { return }
+                        if data["code"] as! Int == 0 {
+                           
+                        } else {
+                            
+                        }
                     }
-                }
-                
-                ZegoUIKitSignalingPluginImpl.shared.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.inviteToCoHost.rawValue, data: nil, notificationConfig: nil) { data in
-                    guard let data = data else { return }
-                    if data["code"] as! Int == 0 {
-                        memberButton.delegate?.memberListDidClickInvitate(currentUser)
-                    } else {
-                        ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.inviteCoHostFailedToast ?? "", onView: self.memberButton?.controller?.view)
+                    memberButton.delegate?.memberListDidClickRemoveCoHost(currentUser)
+                } else {
+                    if let hostInviteList = self.memberButton?.hostInviteList {
+                        if hostInviteList.contains(where: {
+                            return $0.userID == userID
+                        }) {
+                            ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.repeatInviteCoHostFailedToast ?? "", onView: memberButton.controller?.view)
+                            return
+                        }
+                    }
+                    
+                    ZegoUIKitSignalingPluginImpl.shared.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.inviteToCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                        guard let data = data else { return }
+                        if data["code"] as! Int == 0 {
+                            memberButton.delegate?.memberListDidClickInvitate(currentUser)
+                        } else {
+                            ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.inviteCoHostFailedToast ?? "", onView: self.memberButton?.controller?.view)
+                        }
                     }
                 }
             }
         } else if index == 1 {
-            if isCoHost {
+            if ZegoLiveStreamingManager.shared.pkState == .isStartPK {
                 self.currentUser = nil
             } else {
-                ZegoUIKit.shared.removeUserFromRoom([userID])
+                if isCoHost {
+                    self.currentUser = nil
+                } else {
+                    ZegoUIKit.shared.removeUserFromRoom([userID])
+                }
             }
         } else {
             self.currentUser = nil

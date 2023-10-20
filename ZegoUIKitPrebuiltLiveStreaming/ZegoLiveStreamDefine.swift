@@ -66,12 +66,21 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case requestCoHost = 2
     case inviteToCoHost = 3
     case removeCoHost = 4
+    case pk = 5
 }
 
 @objc public enum ZegoLiveStreamingRole: Int {
     case host = 0
     case coHost = 1
     case audience = 2
+}
+@objc public enum ZegoLiveStreamingPKBattleRejectCode: Int {
+    case host_reject
+    case use_not_host
+    case in_pk
+    case live_not_started
+    case already_send
+    case already_received
 }
 
 public let kRoleHost: UInt = 1

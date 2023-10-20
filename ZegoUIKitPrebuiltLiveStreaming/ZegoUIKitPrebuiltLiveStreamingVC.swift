@@ -13,6 +13,10 @@ import ZegoUIKit
     @objc optional func onLeaveLiveStreaming()
     @objc optional func onLiveStreamingEnded()
     @objc optional func onStartLiveButtonPressed()
+    
+    @objc optional func getPKBattleForegroundView(_ parentView: UIView, userInfo: ZegoUIKitUser) -> UIView?
+    @objc optional func getPKBattleTopView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView?
+    @objc optional func getPKBattleBottomView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView?
 }
 
 public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
@@ -56,19 +60,15 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     var liveStatus: String = "0" {
         didSet {
             self.bottomBar.liveStatus = liveStatus
-            self.audioVideoContainer.view.isHidden = (liveStatus == "1" || self.config.role == .host) ? false : true
+            self.audioVideoContainer?.view.isHidden = (liveStatus == "1" || self.config.role == .host) ? false : true
             self.backgroundView.liveStatus = liveStatus
         }
     }
-    
+    var audioVideoContainer: ZegoAudioVideoContainer?
+    var pkBattleView: PKContainer?
     
     private let help = ZegoUIKitPrebuiltLiveStreamingVC_Help()
-    
-    lazy var backgroundImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = ZegoUIKitLiveStreamIconSetType.live_background_image.load()
-        return imageView
-    }()
+    let liveManager = ZegoLiveStreamingManager.shared
     
     lazy var roomTipLabel: UILabel = {
         let label: UILabel = UILabel()
@@ -83,34 +83,6 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     lazy var backgroundView: ZegoLiveStreamingBackGroundView = {
         let view = ZegoLiveStreamingBackGroundView()
         return view
-    }()
-    
-    lazy var audioVideoContainer: ZegoAudioVideoContainer = {
-        let container = ZegoAudioVideoContainer()
-        container.delegate = self.help
-        
-        let audioVideoViewConfig: ZegoAudioVideoViewConfig = ZegoAudioVideoViewConfig()
-        audioVideoViewConfig.useVideoViewAspectFill = self.config.audioVideoViewConfig.useVideoViewAspectFill
-        audioVideoViewConfig.showSoundWavesInAudioMode = self.config.audioVideoViewConfig.showSoundWavesInAudioMode
-        
-        if let layout = config.layout {
-            if layout.config is ZegoLayoutGalleryConfig {
-                let galleryConfig = layout.config as! ZegoLayoutGalleryConfig
-                container.setLayout(layout.mode, config: galleryConfig, audioVideoConfig: audioVideoViewConfig)
-            } else if layout.config is ZegoLayoutPictureInPictureConfig {
-                let pipConfig = layout.config as! ZegoLayoutPictureInPictureConfig
-                container.setLayout(layout.mode, config: pipConfig, audioVideoConfig: audioVideoViewConfig)
-            }
-        } else {
-            let layoutConfig = ZegoLayoutPictureInPictureConfig()
-            layoutConfig.smallViewPostion = .bottomRight
-            layoutConfig.smallViewSize = CGSize(width: 93, height: 124)
-            layoutConfig.spacingBetweenSmallViews = 8
-            layoutConfig.removeViewWhenAudioVideoUnavailable = true
-            container.setLayout(.pictureInPicture, config: layoutConfig, audioVideoConfig: audioVideoViewConfig)
-        }
-        container.view.backgroundColor = UIColor.colorWithHexString("#4A4B4D")
-        return container
     }()
     
     lazy var leaveButton: ZegoLeaveButton = {
@@ -185,14 +157,69 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         return iconView
     }()
     
+    func createAudioVideoViewContainer() {
+        if let _ = audioVideoContainer {
+            return
+        }
+        let container = ZegoAudioVideoContainer()
+        audioVideoContainer = container
+        container.delegate = self.help
+        
+        let audioVideoViewConfig: ZegoAudioVideoViewConfig = ZegoAudioVideoViewConfig()
+        audioVideoViewConfig.useVideoViewAspectFill = self.config.audioVideoViewConfig.useVideoViewAspectFill
+        audioVideoViewConfig.showSoundWavesInAudioMode = self.config.audioVideoViewConfig.showSoundWavesInAudioMode
+        
+        if let layout = config.layout {
+            if layout.config is ZegoLayoutGalleryConfig {
+                let galleryConfig = layout.config as! ZegoLayoutGalleryConfig
+                container.setLayout(layout.mode, config: galleryConfig, audioVideoConfig: audioVideoViewConfig)
+            } else if layout.config is ZegoLayoutPictureInPictureConfig {
+                let pipConfig = layout.config as! ZegoLayoutPictureInPictureConfig
+                container.setLayout(layout.mode, config: pipConfig, audioVideoConfig: audioVideoViewConfig)
+            }
+        } else {
+            let layoutConfig = ZegoLayoutPictureInPictureConfig()
+            layoutConfig.smallViewPostion = .bottomRight
+            layoutConfig.smallViewSize = CGSize(width: 93, height: 124)
+            layoutConfig.spacingBetweenSmallViews = 8
+            layoutConfig.removeViewWhenAudioVideoUnavailable = true
+            container.setLayout(.pictureInPicture, config: layoutConfig, audioVideoConfig: audioVideoViewConfig)
+        }
+        container.view.backgroundColor = UIColor.colorWithHexString("#4A4B4D")
+        self.view.insertSubview(container.view, at: 0)
+    }
+    
+    func destoryAudioVideoView() {
+        audioVideoContainer?.view.removeFromSuperview()
+        audioVideoContainer = nil
+    }
+    
+    func createPKView() {
+        if let _ = pkBattleView {
+            return
+        }
+        let view = PKContainer(frame: CGRect.zero, role: liveManager.currentRole)
+        view.delegate = self.help
+        pkBattleView = view
+        self.view.insertSubview(view, at: 0)
+    }
+    
+    func destoryPKView() {
+        pkBattleView?.removeFromSuperview()
+        pkBattleView = nil
+    }
+    
     @objc public init(_ appID: UInt32, appSign: String, userID: String, userName: String, liveID: String, config: ZegoUIKitPrebuiltLiveStreamingConfig) {
         super.init(nibName: nil, bundle: nil)
-        ZegoUIKit.shared.initWithAppID(appID: appID, appSign: appSign)
-        if config.enableCoHosting {
-            ZegoUIKitSignalingPluginImpl.shared.initWithAppID(appID: appID, appSign: appSign)
-            ZegoUIKitSignalingPluginImpl.shared.login(userID, userName: userName, callback: nil)
+        debugPrint("your userID:\(userID)")
+        liveManager.addLiveManagerDelegate(self.help)
+        liveManager.initWithAppID(appID: appID, appSign: appSign, enableCoHost: config.enableCoHosting)
+        liveManager.login(userID: userID, userName: userName) { data in
+            let code = data?["code"] as! Int
+            if code == 0 {
+                self.joinRoom()
+            }
         }
-//        ZegoUIKit.shared.localUserInfo = ZegoUIKitUser.init(userID, userName)
         ZegoUIKit.shared.addEventHandler(self.help)
         self.userID = userID
         self.userName = userName
@@ -201,6 +228,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         if config.role == .host {
             self.currentHost = ZegoUIKitUser.init(userID, userName)
         }
+        liveManager.currentRole = config.role
         self.backgroundView.config = config
         self.backgroundView.liveStatus = liveStatus
         self.help.liveStreamingVC = self
@@ -213,12 +241,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        createAudioVideoViewContainer()
         self.view.backgroundColor = UIColor.white
-        self.view.addSubview(self.audioVideoContainer.view)
         self.view.addSubview(self.backgroundView)
-//        self.view.addSubview(self.backgroundImageView)
         self.view.addSubview(self.switchCameraButton)
-//        self.view.addSubview(self.roomTipLabel)
         self.view.addSubview(self.headIconView)
         self.view.addSubview(self.leaveButton)
         self.view.addSubview(self.memberButton)
@@ -231,10 +257,12 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         if let startLiveButton = startLiveButton {
             self.view.bringSubviewToFront(startLiveButton)
         }
+        if let pkBattleView = pkBattleView {
+            self.view.insertSubview(pkBattleView, at: 0)
+        }
         self.memberButton.currentHost = self.currentHost
         self.setupLayout()
         self.setUIDisplayStatus()
-        self.joinRoom()
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillChangeFrame(node:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
@@ -253,8 +281,6 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     func setUIDisplayStatus() {
         if self.config.role == .host {
-//            self.backgroundImageView.isHidden = true
-//            self.roomTipLabel.isHidden = true
             self.headIconView.host = ZegoUIKit.shared.localUserInfo
             if liveStatus == "1" {
                 self.switchCameraButton.isHidden = true
@@ -273,14 +299,8 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             self.switchCameraButton.isHidden = true
             self.startLiveButton?.isHidden = true
             if self.currentHost == nil {
-//                self.roomTipLabel.isHidden = false
                 self.headIconView.isHidden = true
             } else {
-//                if liveStatus == "1" {
-//                    self.roomTipLabel.isHidden = true
-//                } else {
-//                    self.roomTipLabel.isHidden = false
-//                }
                 self.headIconView.isHidden = false
             }
             self.memberButton.isHidden = false
@@ -329,15 +349,13 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     }
     
     private func setupLayout() {
-        self.audioVideoContainer.view.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
+        self.audioVideoContainer?.view.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
         self.backgroundView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
-//        self.backgroundImageView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.size.width, height: self.view.bounds.size.height)
-//        self.roomTipLabel.center = CGPoint(x: self.view.bounds.size.width * 0.5, y: self.view.bounds.size.height * 0.5)
-//        self.roomTipLabel.bounds = CGRect(x: 0, y: 0, width: 180, height: 50)
         self.headIconView.frame = CGRect(x: 16, y: 53, width: 105, height: 34)
         self.headIconView.layer.masksToBounds = true
         self.headIconView.layer.cornerRadius = 17
         self.backButton.frame = CGRect(x: 4, y: 50, width: 40, height: 40)
+        self.pkBattleView?.frame = CGRect(x: 0, y: 0, width: view.bounds.size.width, height: view.bounds.size.height)
         self.switchCameraButton.frame = CGRect(x: self.view.frame.size.width - 52, y: 52, width: 36, height: 36)
         self.leaveButton.frame = CGRect(x: self.view.frame.size.width - 50, y: 57, width: 26, height: 26)
         self.leaveButton.backgroundColor = UIColor.colorWithHexString("#1E2740", alpha: 0.4)
@@ -360,7 +378,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
               let userID = self.userID,
               let userName = self.userName
         else { return }
-        ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: liveID,markAsLargeRoom: self.config.markAsLargeRoom)
+        liveManager.joinRoom(userID: userID, userName: userName, roomID: liveID, markAsLargeRoom: self.config.markAsLargeRoom)
         if self.config.turnOnCameraWhenJoining || self.config.turnOnMicrophoneWhenJoining {
             self.requestCameraAndeMicPermission(true)
         }
@@ -405,7 +423,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         }
     }
     
-    private func setStartLiveStatus() {
+    func setStartLiveStatus() {
         self.liveStatus = "1"
         ZegoUIKit.shared.updateRoomProperties(["host": self.userID ?? "", "live_status": "1"], callback: nil)
         self.startLiveButton?.isHidden = true
@@ -539,6 +557,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     func updateConfigMenuBar(_ role: ZegoLiveStreamingRole) {
         self.config.role = role
+        liveManager.currentRole = role
         self.bottomBar.config = self.config
 //        guard let menuBarButtons = menuBarButtons else {
 //            return
@@ -604,19 +623,19 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     }
     
     deinit {
-        ZegoUIKit.shared.leaveRoom()
-        ZegoUIKitSignalingPluginImpl.shared.loginOut()
-        ZegoUIKitSignalingPluginImpl.shared.uninit()
+        liveManager.leaveRoom()
         print("ZegoUIKitPrebuiltLiveStreamingVC deinit")
     }
     
 }
 
-class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate, ZegoStartLiveButtonDelegate {
+class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate, ZegoStartLiveButtonDelegate, ZegoLiveStreamingManagerDelegate, PKContainerDelegate {
+    
     
     weak var liveStreamingVC: ZegoUIKitPrebuiltLiveStreamingVC?
     var shouldSortHostAtFirst: Bool = true
     weak var invitateAlter: UIAlertController?
+    weak var pkAlterView: UIAlertController?
     
     //MARK: -ZegoUIKitEventHandle
     func onRoomStateChanged(_ reason: ZegoUIKitRoomStateChangedReason, errorCode: Int32, extendedData: [AnyHashable : Any], roomID: String) {
@@ -654,9 +673,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 liveStreamingVC.coHostList.append(user)
             }
         }
-        if liveStreamingVC.coHostList.count > 0 && liveStreamingVC.liveStatus == "1" {
-            liveStreamingVC.backgroundImageView.isHidden = true
-        }
+//        if liveStreamingVC.coHostList.count > 0 && liveStreamingVC.liveStatus == "1" {
+//            liveStreamingVC.backgroundImageView.isHidden = true
+//        }
         liveStreamingVC.memberButton.coHostList = liveStreamingVC.coHostList
     }
     
@@ -677,15 +696,15 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             liveStreamingVC.addOrRmoveSeatListUser(user, isAdd: false)
             liveStreamingVC.addOrRemoveHostInviteList(user, isAdd: false)
         }
-        if liveStreamingVC.coHostList.count == 0 && liveStreamingVC.liveStatus != "1" {
-            liveStreamingVC.backgroundImageView.isHidden = false
-        }
+//        if liveStreamingVC.coHostList.count == 0 && liveStreamingVC.liveStatus != "1" {
+//            liveStreamingVC.backgroundImageView.isHidden = false
+//        }
         liveStreamingVC.memberButton.coHostList = liveStreamingVC.coHostList
     }
     
     func onRoomPropertiesFullUpdated(_ updateKeys: [String], oldProperties: [String : String], properties: [String : String]) {
         guard let liveStreamingVC = liveStreamingVC,
-              let userID = liveStreamingVC.userID
+              let _ = liveStreamingVC.userID
         else { return }
         if liveStreamingVC.config.role == .host {
 //            var thereIsHostInRoom: Bool = false
@@ -706,10 +725,8 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             guard let live_status = properties["live_status"] else { return }
             liveStreamingVC.liveStatus = live_status
             if live_status == "1" {
-//                self.liveStreamingVC?.roomTipLabel.isHidden = true
+                
             } else {
-//                self.liveStreamingVC?.roomTipLabel.isHidden = false
-//                self.liveStreamingVC?.backgroundImageView.isHidden = false
                 liveStreamingVC.coHostList.removeAll()
                 liveStreamingVC.memberButton.coHostList = liveStreamingVC.memberButton.coHostList
             }
@@ -720,7 +737,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         if key == "host" {
             self.liveStreamingVC?.currentHost = ZegoUIKit.shared.getUser(newValue)
             self.liveStreamingVC?.headIconView.host = self.liveStreamingVC?.currentHost
-            self.liveStreamingVC?.audioVideoContainer.reload()
+            self.liveStreamingVC?.audioVideoContainer?.reload()
         } else if key == "live_status" {
             if newValue == "0" {
                 shouldSortHostAtFirst = true
@@ -735,7 +752,6 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 }
                 ZegoUIKit.shared.stopPlayingAllAudioVideo()
             } else if newValue == "1" {
-//                self.liveStreamingVC?.backgroundImageView.isHidden = true
                 ZegoUIKit.shared.startPlayingAllAudioVideo()
             } else {
                 ZegoUIKit.shared.stopPlayingAllAudioVideo()
@@ -802,26 +818,27 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         }
     }
     
-    func onInvitationReceived(_ inviter: ZegoUIKitUser, type: Int, data: String?) {
-        guard let liveStreamingVC = liveStreamingVC else { return }
-        if liveStreamingVC.config.role == .host {
-            liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: true)
-        } else {
-            let dataDic: Dictionary? = data?.live_convertStringToDictionary()
-            let pluginInvitationID: String? = dataDic?["invitationID"] as? String
-            guard let userID = inviter.userID else { return }
-            if ZegoInvitationType(rawValue: type) == .removeCoHost {
-                liveStreamingVC.addOrRemoveAudienceInviteList(inviter, isAdd: false)
-                liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: false)
-                liveStreamingVC.bottomBar.isCoHost = false
-                ZegoUIKit.shared.turnCameraOn(liveStreamingVC.userID ?? "", isOn: false)
-                ZegoUIKit.shared.turnMicrophoneOn(liveStreamingVC.userID ?? "", isOn: false)
-                liveStreamingVC.updateConfigMenuBar(.audience)
-            } else if ZegoInvitationType(rawValue: type) == .inviteToCoHost {
-                liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: true)
-                self.showInvitationAltr(userID, invitationID: pluginInvitationID)
-            }
+    func onIncomingCohostRequest(inviter: ZegoUIKitUser) {
+        if liveStreamingVC?.liveManager.currentRole == .host {
+            liveStreamingVC?.addOrRmoveSeatListUser(inviter, isAdd: true)
         }
+    }
+    
+    func onIncomingInviteToCohostRequest(inviter: ZegoUIKitUser, invitationID: String) {
+        guard let userID = inviter.userID else { return }
+        liveStreamingVC?.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: true)
+        self.showInvitationAltr(userID, invitationID: invitationID)
+    }
+    
+    
+    func onIncomingRemoveCohostRequest(inviter: ZegoUIKitUser) {
+        guard let liveStreamingVC = liveStreamingVC else { return }
+        liveStreamingVC.addOrRemoveAudienceInviteList(inviter, isAdd: false)
+        liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: false)
+        liveStreamingVC.bottomBar.isCoHost = false
+        ZegoUIKit.shared.turnCameraOn(liveStreamingVC.userID ?? "", isOn: false)
+        ZegoUIKit.shared.turnMicrophoneOn(liveStreamingVC.userID ?? "", isOn: false)
+        liveStreamingVC.updateConfigMenuBar(.audience)
     }
     
     func showTipView(_ tipStr: String) {
@@ -841,7 +858,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         self.invitateAlter = alterView
         let cancelButton: UIAlertAction = UIAlertAction.init(title: cancelStr, style: .cancel) { action in
             let dataDict: [String : AnyObject] = ["invitationID": invitationID as AnyObject]
-            ZegoUIKitSignalingPluginImpl.shared.refuseInvitation(inviterID, data: dataDict.live_jsonString)
+            ZegoUIKit.getSignalingPlugin().refuseInvitation(inviterID, data: dataDict.live_jsonString)
             liveStreamingVC.addOrRemoveAudienceReceiveInviteList(ZegoUIKitUser.init(inviterID, ""), isAdd: false)
         }
         
@@ -851,7 +868,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             liveStreamingVC.updateConfigMenuBar(.coHost)
             ZegoUIKit.shared.turnCameraOn(liveStreamingVC.userID ?? "", isOn: true)
             ZegoUIKit.shared.turnMicrophoneOn(liveStreamingVC.userID ?? "", isOn: true)
-            ZegoUIKitSignalingPluginImpl.shared.acceptInvitation(inviterID, data: nil)
+            ZegoUIKit.getSignalingPlugin().acceptInvitation(inviterID, data: nil, callback: nil)
         }
         alterView.addAction(cancelButton)
         alterView.addAction(sureButton)
@@ -859,7 +876,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         
     }
     
-    func onInvitationAccepted(_ invitee: ZegoUIKitUser, data: String?) {
+    func onIncomingAcceptCohostRequest(invitee: ZegoUIKitUser, data: String?) {
         guard let liveStreamingVC = liveStreamingVC else { return }
         if liveStreamingVC.config.role != .host {
             // is host accept
@@ -872,62 +889,69 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         }
     }
     
-    func onInvitationCanceled(_ inviter: ZegoUIKitUser, data: String?) {
+    func onIncomingCancelCohostRequest(inviter: ZegoUIKitUser, data: String?) {
         guard let liveStreamingVC = liveStreamingVC else {
             return
         }
-        if liveStreamingVC.config.role == .host {
-            liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: false)
-        } else {
-            self.invitateAlter?.dismiss(animated: false)
-            liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: false)
-        }
+        liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: false)
     }
     
-    func onInvitationRefused(_ invitee: ZegoUIKitUser, data: String?) {
+    func onIncomingCancelCohostInvite(inviter: ZegoUIKitUser, data: String?) {
+        guard let liveStreamingVC = liveStreamingVC else {
+            return
+        }
+        self.invitateAlter?.dismiss(animated: false)
+        liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: false)
+    }
+    
+    func onIncomingRefuseCohostInvite(invitee: ZegoUIKitUser, data: String?) {
         guard let liveStreamingVC = liveStreamingVC else { return }
-        if liveStreamingVC.config.role == .host {
-            let user: ZegoUIKitUser? = ZegoUIKit.shared.getUser(invitee.userID ?? "")
-            guard let user = user else { return }
-            ZegoLiveStreamTipView.showWarn(String(format: "%@ %@", user.userName ?? "",liveStreamingVC.config.translationText.audienceRejectInvitationToast), onView: liveStreamingVC.view)
-            liveStreamingVC.addOrRmoveSeatListUser(invitee, isAdd: false)
+        let user: ZegoUIKitUser? = ZegoUIKit.shared.getUser(invitee.userID ?? "")
+        guard let user = user else { return }
+        ZegoLiveStreamTipView.showWarn(String(format: "%@ %@", user.userName ?? "",liveStreamingVC.config.translationText.audienceRejectInvitationToast), onView: liveStreamingVC.view)
+        liveStreamingVC.addOrRmoveSeatListUser(invitee, isAdd: false)
+        liveStreamingVC.addOrRemoveHostInviteList(invitee, isAdd: false)
+    }
+    
+    func onIncomingRefuseCohostRequest(invitee: ZegoUIKitUser, data: String?) {
+        guard let liveStreamingVC = liveStreamingVC else { return }
+        liveStreamingVC.addOrRemoveAudienceInviteList(invitee, isAdd: false)
+        ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.hostRejectCoHostRequestToast, onView: liveStreamingVC.view)
+        liveStreamingVC.updateConfigMenuBar(.audience)
+    }
+    
+    func onIncomingCohostInviteTimeOut(inviter: ZegoUIKitUser, data: String?) {
+        guard let liveStreamingVC = liveStreamingVC else {
+            return
+        }
+        liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: false)
+    }
+    
+    func onIncomingCohostRequestTimeOut(inviter: ZegoUIKitUser, data: String?) {
+        guard let liveStreamingVC = liveStreamingVC else {
+            return
+        }
+        liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: false)
+    }
+    
+    func onIncomingCohostInviteResponseTimeOut(invitees: [ZegoUIKitUser], data: String?) {
+        guard let liveStreamingVC = liveStreamingVC else {
+            return
+        }
+        for invitee in invitees {
             liveStreamingVC.addOrRemoveHostInviteList(invitee, isAdd: false)
-        } else {
-            // update bottom bar button
+        }
+    }
+    
+    func onIncomingCohostRequestResponseTimeOut(invitees: [ZegoUIKitUser], data: String?) {
+        guard let liveStreamingVC = liveStreamingVC else {
+            return
+        }
+        for invitee in invitees {
             liveStreamingVC.addOrRemoveAudienceInviteList(invitee, isAdd: false)
-            ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.hostRejectCoHostRequestToast, onView: liveStreamingVC.view)
-            liveStreamingVC.updateConfigMenuBar(.audience)
         }
-    }
-    
-    func onInvitationTimeout(_ inviter: ZegoUIKitUser, data: String?) {
-        guard let liveStreamingVC = liveStreamingVC else {
-            return
-        }
-        if liveStreamingVC.config.role == .host {
-            liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: false)
-        } else {
-            self.invitateAlter?.dismiss(animated: false)
-            liveStreamingVC.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: false)
-        }
-    }
-    
-    func onInvitationResponseTimeout(_ invitees: [ZegoUIKitUser], data: String?) {
-        guard let liveStreamingVC = liveStreamingVC else {
-            return
-        }
-        if liveStreamingVC.config.role == .host {
-            for invitee in invitees {
-                liveStreamingVC.addOrRemoveHostInviteList(invitee, isAdd: false)
-            }
-        } else {
-            //update bottom bar button
-            for invitee in invitees {
-                liveStreamingVC.addOrRemoveAudienceInviteList(invitee, isAdd: false)
-            }
-            liveStreamingVC.bottomBar.isCoHost = false
-            liveStreamingVC.updateConfigMenuBar(.audience)
-        }
+        liveStreamingVC.bottomBar.isCoHost = false
+        liveStreamingVC.updateConfigMenuBar(.audience)
     }
     
     
@@ -1003,19 +1027,14 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             guard let host = liveStreamingVC.currentHost else { return }
             liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
             liveStreamingVC.bottomBar.isCoHost = false
-            ZegoUIKitSignalingPluginImpl.shared.cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
+            ZegoUIKit.getSignalingPlugin().cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
         case .endCoHost:
             self.showEndConnectionAlter(sender)
         }
     }
     
     func showEndConnectionAlter(_ sender: ZegoCoHostControlButton) {
-        guard let liveStreamingVC = liveStreamingVC,
-              let host = liveStreamingVC.currentHost,
-              let userID = liveStreamingVC.userID
-        else {
-            return
-        }
+        guard let liveStreamingVC = liveStreamingVC else { return }
         let alterView: UIAlertController = UIAlertController.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfo.title, message: liveStreamingVC.config.translationText.endConnectionDialogInfo.message, preferredStyle: .alert)
         self.invitateAlter = alterView
         let cancelButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfo.cancelButtonName, style: .cancel) { action in
@@ -1023,16 +1042,23 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         
         let sureButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfo.confirmButtonName, style: .default) { action in
             sender.buttonType = .requestCoHost
-            liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
-            liveStreamingVC.addOrRemoveAudienceReceiveInviteList(host, isAdd: false)
-            liveStreamingVC.bottomBar.isCoHost = false
-            ZegoUIKit.shared.turnCameraOn(userID, isOn: false)
-            ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: false)
-            liveStreamingVC.updateConfigMenuBar(.audience)
+            self.endCohostRequest()
         }
         alterView.addAction(cancelButton)
         alterView.addAction(sureButton)
         liveStreamingVC.present(alterView, animated: false, completion: nil)
+    }
+    
+    func endCohostRequest() {
+        guard let liveStreamingVC = liveStreamingVC,
+              let host = liveStreamingVC.currentHost,
+              let userID = liveStreamingVC.userID else { return }
+        liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
+        liveStreamingVC.addOrRemoveAudienceReceiveInviteList(host, isAdd: false)
+        liveStreamingVC.bottomBar.isCoHost = false
+        ZegoUIKit.shared.turnCameraOn(userID, isOn: false)
+        ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: false)
+        liveStreamingVC.updateConfigMenuBar(.audience)
     }
 
     //MARK: - LeaveButtonDelegate ZegoLiveStreamBottomBarDelegate
@@ -1090,6 +1116,84 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         guard let liveStreamingVC = liveStreamingVC else { return }
         liveStreamingVC.startLiveClick()
         liveStreamingVC.delegate?.onStartLiveButtonPressed?()
+    }
+    
+    //MARK: - ZegoLiveStreamingManagerDelegate
+    func onIncomingPKRequestReceived(requestID: String, anotherHostUser: ZegoUIKitUser, anotherHostLiveID: String, customData: String?) {
+        let alterView = UIAlertController(title: "receive pk request", message: "", preferredStyle: .alert)
+        self.pkAlterView = alterView
+        let acceptButton: UIAlertAction = UIAlertAction(title: "accept", style: .default) { [weak self] action in
+            self?.liveStreamingVC?.liveManager.acceptIncomingPKBattleRequest(requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser)
+        }
+        let rejectButton: UIAlertAction = UIAlertAction(title: "reject", style: .cancel) { [weak self] action in
+            self?.liveStreamingVC?.liveManager.rejectPKBattleStartRequest(requestID)
+        }
+        alterView.addAction(acceptButton)
+        alterView.addAction(rejectButton)
+        liveStreamingVC?.present(alterView, animated: true)
+    }
+    
+    func onIncomingPKRequestCancelled(anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser, customData: String?) {
+        self.pkAlterView?.dismiss(animated: true)
+    }
+    
+    func onIncomingPKRequestTimeout(requestID: String, anotherHostUser: ZegoUIKitUser) {
+        self.pkAlterView?.dismiss(animated: true)
+    }
+    
+    func onPKStarted(roomID: String, userID: String) {
+        guard let liveStreamingVC = liveStreamingVC else { return }
+        liveStreamingVC.createPKView()
+        if liveStreamingVC.liveManager.currentRole == .host {
+            liveStreamingVC.setStartLiveStatus()
+            liveStreamingVC.destoryAudioVideoView()
+            liveStreamingVC.pkBattleView?.isHidden = false
+        } else {
+            liveStreamingVC.pkBattleView?.isHidden = true
+        }
+        liveStreamingVC.pkBattleView?.pkInfo = liveStreamingVC.liveManager.pkInfo
+        if liveStreamingVC.liveManager.currentRole == .coHost {
+            endCohostRequest()
+        } else if liveStreamingVC.liveManager.currentRole == .audience {
+            invitateAlter?.dismiss(animated: true)
+            if liveStreamingVC.audienceInviteList.count > 0 {
+                guard let host = liveStreamingVC.currentHost else { return }
+                liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
+                liveStreamingVC.bottomBar.isCoHost = false
+                ZegoUIKit.getSignalingPlugin().cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
+            }
+            
+        }
+    }
+    
+    func onPKEnded() {
+        liveStreamingVC?.pkBattleView?.pkInfo = nil
+        liveStreamingVC?.destoryPKView()
+        liveStreamingVC?.createAudioVideoViewContainer()
+    }
+    
+    func onPKViewAvaliable() {
+        if liveStreamingVC?.liveManager.currentRole != .host {
+            liveStreamingVC?.destoryAudioVideoView()
+            liveStreamingVC?.pkBattleView?.isHidden = false
+        }
+    }
+    
+    func onMixerStreamTaskFail(errorCode: Int) {
+        
+    }
+    
+    //MARK: - PKContainerDelegate
+    func getPKBattleForegroundView(_ parentView: UIView, userInfo: ZegoUIKitUser) -> UIView {
+        return liveStreamingVC?.delegate?.getPKBattleForegroundView?(parentView, userInfo: userInfo) ?? UIView()
+    }
+    
+    func getPKBattleTopView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView {
+        return liveStreamingVC?.delegate?.getPKBattleTopView?(parentView, userList: userList) ?? UIView()
+    }
+    
+    func getPKBattleBottomView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView {
+        return liveStreamingVC?.delegate?.getPKBattleBottomView?(parentView, userList: userList) ?? UIView()
     }
 }
 

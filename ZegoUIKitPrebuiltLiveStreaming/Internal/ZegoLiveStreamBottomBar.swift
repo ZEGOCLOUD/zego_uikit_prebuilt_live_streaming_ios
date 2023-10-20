@@ -126,6 +126,7 @@ class ZegoLiveStreamBottomBar: UIView {
         self.addSubview(self.messageButton)
         self.createButton()
         self.setupLayout()
+        ZegoLiveStreamingManager.shared.addLiveManagerDelegate(self)
     }
     
     required public init?(coder: NSCoder) {
@@ -236,7 +237,8 @@ class ZegoLiveStreamBottomBar: UIView {
                     coHostButton.layer.masksToBounds = true
                     coHostButton.layer.cornerRadius = 18
                 } else {
-                    button.frame = CGRect.init(x: self.frame.size.width - self.margin - itemSize.width, y: UIkitLiveAdaptLandscapeHeight(10), width: itemSize.width, height: itemSize.height)
+                    let width = button.bounds.size.width > 0 ? button.bounds.size.width : itemSize.width
+                    button.frame = CGRect.init(x: self.frame.size.width - self.margin - width, y: UIkitLiveAdaptLandscapeHeight(10), width: width, height: itemSize.height)
                 }
             } else {
                 if let lastView = lastView {
@@ -252,7 +254,8 @@ class ZegoLiveStreamBottomBar: UIView {
                         }
                         
                     } else {
-                        button.frame = CGRect.init(x: lastView.frame.minX - itemSpace - itemSize.width, y: lastView.frame.minY, width: itemSize.width, height: itemSize.height)
+                        let width = button.bounds.size.width > 0 ? button.bounds.size.width : itemSize.width
+                        button.frame = CGRect.init(x: lastView.frame.minX - itemSpace - width, y: lastView.frame.minY, width: width, height: itemSize.height)
                     }
                 }
             }
@@ -397,7 +400,7 @@ class ZegoMoreButton: UIButton {
     }
 }
 
-extension ZegoLiveStreamBottomBar: ZegoInRoomMessageButtonDelegate, LeaveButtonDelegate, ZegoCoHostControlButtonDelegate {
+extension ZegoLiveStreamBottomBar: ZegoInRoomMessageButtonDelegate, LeaveButtonDelegate, ZegoCoHostControlButtonDelegate, ZegoLiveStreamingManagerDelegate {
     func inRoomMessageButtonDidClick() {
         self.delegate?.onInRoomMessageButtonClick()
     }
@@ -417,4 +420,28 @@ extension ZegoLiveStreamBottomBar: ZegoInRoomMessageButtonDelegate, LeaveButtonD
         self.setupLayout()
     }
     
+    func onPKStarted(roomID: String, userID: String) {
+        for button in buttons {
+            if button is ZegoCoHostControlButton {
+                button.isHidden = true
+            }
+            if button is ZegoToggleMicrophoneButton {
+                let micButton: ZegoToggleMicrophoneButton = button as! ZegoToggleMicrophoneButton
+                micButton.muteMode = true
+            }
+        }
+    }
+    
+    func onPKEnded() {
+        for button in buttons {
+            if button is ZegoCoHostControlButton {
+                button.isHidden = false
+                break
+            }
+            if button is ZegoToggleMicrophoneButton {
+                let micButton: ZegoToggleMicrophoneButton = button as! ZegoToggleMicrophoneButton
+                micButton.muteMode = false
+            }
+        }
+    }
 }
