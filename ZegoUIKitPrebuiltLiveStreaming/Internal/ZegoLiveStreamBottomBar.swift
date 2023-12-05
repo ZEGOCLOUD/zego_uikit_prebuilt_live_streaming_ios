@@ -289,7 +289,7 @@ class ZegoLiveStreamBottomBar: UIView {
             case .toggleCameraButton:
                 let switchCameraComponent: ZegoToggleCameraButton = ZegoToggleCameraButton()
                 switchCameraComponent.isOn = self.config.turnOnCameraWhenJoining
-                switchCameraComponent.userID = ZegoUIKit.shared.localUserInfo?.userID
+                switchCameraComponent.userID = userID
                 if self.config.bottomMenuBarConfig.maxCount < self.barButtons.count && index >= self.config.bottomMenuBarConfig.maxCount {
                     self.moreButtonList.append(switchCameraComponent)
                 } else {
@@ -298,7 +298,7 @@ class ZegoLiveStreamBottomBar: UIView {
                 }
             case .toggleMicrophoneButton:
                 let micButtonComponent: ZegoToggleMicrophoneButton = ZegoToggleMicrophoneButton()
-                micButtonComponent.userID = ZegoUIKit.shared.localUserInfo?.userID
+                micButtonComponent.userID = userID
                 micButtonComponent.isOn = self.config.turnOnMicrophoneWhenJoining
                 if self.config.bottomMenuBarConfig.maxCount < self.barButtons.count && index >= self.config.bottomMenuBarConfig.maxCount {
                     self.moreButtonList.append(micButtonComponent)

@@ -116,7 +116,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
     
     func agreeButtonDidClick(_ user: ZegoUIKitUser) {
         guard let userID = user.userID else { return }
-        ZegoUIKitSignalingPluginImpl.shared.acceptInvitation(userID, data: nil, callback: nil)
+        ZegoUIKit.getSignalingPlugin().acceptInvitation(userID, data: nil, callback: nil)
         self.requestCoHostList = self.requestCoHostList?.filter{
             return $0.userID != user.userID
         }
@@ -127,7 +127,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
     
     func disAgreeButtonDidClick(_ user: ZegoUIKitUser) {
         guard let userID = user.userID else { return }
-        ZegoUIKitSignalingPluginImpl.shared.refuseInvitation(userID, data: nil)
+        ZegoUIKit.getSignalingPlugin().refuseInvitation(userID, data: nil)
         self.requestCoHostList = self.requestCoHostList?.filter{
             return $0.userID != user.userID
         }

@@ -89,6 +89,7 @@ public class ZegoLiveStreamingManager: NSObject {
             return ZegoUIKit.shared.getRoomProperties()["live_status"] == "1"
         }
     }
+    var enableCohost: Bool = false
     
     private var pkService: PKService?
     
@@ -104,6 +105,7 @@ public class ZegoLiveStreamingManager: NSObject {
     }
     
     public func initWithAppID(appID: UInt32, appSign: String, enableCoHost: Bool) {
+        self.enableCohost = enableCoHost
         ZegoUIKit.shared.initWithAppID(appID: appID, appSign: appSign)
         if enableCoHost {
             ZegoUIKit.getSignalingPlugin().initWithAppID(appID: appID, appSign: appSign)
@@ -111,12 +113,21 @@ public class ZegoLiveStreamingManager: NSObject {
     }
     
     public func login(userID: String, userName: String, callback: PluginCallBack?) {
-        ZegoUIKit.getSignalingPlugin().login(userID, userName: userName, callback: callback)
+        if enableCohost {
+            ZegoUIKit.getSignalingPlugin().login(userID, userName: userName, callback: callback)
+        } else {
+            ZegoUIKit.shared.login(userID, userName: userName)
+            guard let callback = callback else { return }
+            callback(["code": 0 as AnyObject,
+                      "message": "sucess" as AnyObject])
+        }
     }
     
     public func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool) {
         ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: roomID, markAsLargeRoom: markAsLargeRoom)
-        ZegoUIKit.getSignalingPlugin().joinRoom(roomID: roomID, callback: nil)
+        if enableCohost {
+            ZegoUIKit.getSignalingPlugin().joinRoom(roomID: roomID, callback: nil)
+        }
     }
     
     public func getHostID() -> String {
@@ -215,8 +226,10 @@ public class ZegoLiveStreamingManager: NSObject {
         }
         pkService?.clearData()
         ZegoUIKit.shared.leaveRoom()
-        ZegoUIKit.getSignalingPlugin().leaveRoom { data in
-            ZegoUIKit.getSignalingPlugin().loginOut()
+        if enableCohost {
+            ZegoUIKit.getSignalingPlugin().leaveRoom { data in
+                ZegoUIKit.getSignalingPlugin().loginOut()
+            }
         }
     }
 }
