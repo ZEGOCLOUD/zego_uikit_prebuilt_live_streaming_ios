@@ -57,7 +57,6 @@ class PKService: NSObject {
     var roomPKState: RoomPKState = .isNoPK
     
     private var currentMixerTask: ZegoMixerTask?
-    private let signalingPlugin = ZegoUIKit.getSignalingPlugin()
     private var pkRoomAttribute: [String: String] = [:]
     private var seiTimer: Timer?
     private var checkSEITimer: Timer?
@@ -207,7 +206,7 @@ class PKService: NSObject {
 extension PKService: ZegoUIKitEventHandle {
     
     private func sendUserRequest(userID: String, timeout: UInt32, extendedData: String, callback: PluginCallBack?) {
-        ZegoUIKit.getSignalingPlugin().sendInvitation([userID], timeout: timeout, type: ZegoInvitationType.pk.rawValue, data: extendedData, notificationConfig: nil) { data in
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([userID], timeout: timeout, type: ZegoInvitationType.pk.rawValue, data: extendedData, notificationConfig: nil) { data in
             let invitationID: String = data?["callID"] as? String ?? ""
             self.pkInvitations.append(invitationID)
             guard let callback = callback else { return }
@@ -218,19 +217,19 @@ extension PKService: ZegoUIKitEventHandle {
     private func acceptUserRequest(requestID: String, inviterID: String, extendedData: String, callback: PluginCallBack?) {
         var jsonObject: [String: AnyObject] = extendedData.live_convertStringToDictionary() ?? [:]
         jsonObject["invitationID"] = requestID as AnyObject
-        ZegoUIKit.getSignalingPlugin().acceptInvitation(inviterID, data: jsonObject.live_jsonString, callback: callback)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.acceptInvitation(inviterID, data: jsonObject.live_jsonString, callback: callback)
     }
 
     private func rejectUserRequest(requestID: String, extendedData: String, callback: PluginCallBack?) {
         var jsonObject: [String: AnyObject] = extendedData.live_convertStringToDictionary() ?? [:]
         jsonObject["invitationID"] = requestID as AnyObject
-        ZegoUIKit.getSignalingPlugin().refuseInvitation("", data: jsonObject.live_jsonString)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation("", data: jsonObject.live_jsonString)
     }
     
     private func cancelUserRequest(requestID: String, extendedData: String, callback: PluginCallBack?) {
         var jsonObject: [String: AnyObject] = extendedData.live_convertStringToDictionary() ?? [:]
         jsonObject["invitationID"] = requestID as AnyObject
-        ZegoUIKit.getSignalingPlugin().cancelInvitation([sendPKStartRequest?.anotherUserID ?? ""], data: jsonObject.live_jsonString, callback: callback)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation([sendPKStartRequest?.anotherUserID ?? ""], data: jsonObject.live_jsonString, callback: callback)
     }
     
     func startPK() {
@@ -251,7 +250,7 @@ extension PKService: ZegoUIKitEventHandle {
                     self.pkRoomAttribute["pk_user_id"] = self.currentPKInfo?.pkUser.userID ?? ""
                     self.pkRoomAttribute["pk_user_name"] = self.currentPKInfo?.pkUser.userName ?? ""
                     self.pkRoomAttribute["pk_seq"] = "\(self.currentPKInfo?.seq ?? 0)"
-                    ZegoUIKit.getSignalingPlugin().updateRoomProperty(self.pkRoomAttribute, callback: nil)
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.updateRoomProperty(self.pkRoomAttribute, callback: nil)
                     self.createSEITimer()
                     for delegate in self.eventDelegates.allObjects {
                         delegate.onPKStarted?(roomID: self.currentPKInfo?.pkRoom ?? "", userID: self.currentPKInfo?.pkUser.userID ?? "")
@@ -333,7 +332,7 @@ extension PKService: ZegoUIKitEventHandle {
     
     private func delectPKAttributes() {
         if pkRoomAttribute.keys.isEmpty { return }
-        signalingPlugin.deleteRoomProperties(Array(pkRoomAttribute.keys), callBack: nil)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.deleteRoomProperties(Array(pkRoomAttribute.keys), callBack: nil)
     }
 
     

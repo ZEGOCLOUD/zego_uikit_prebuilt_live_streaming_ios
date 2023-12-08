@@ -218,7 +218,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.liveID = liveID
         self.config = config
         liveManager.addLiveManagerDelegate(self.help)
-        liveManager.initWithAppID(appID: appID, appSign: appSign, enableCoHost: config.enableCoHosting)
+        liveManager.initWithAppID(appID: appID, appSign: appSign, enableSignalingPlugin: config.enableSignalingPlugin)
         ZegoUIKit.shared.addEventHandler(self.help)
         if config.role == .host {
             self.currentHost = ZegoUIKitUser.init(userID, userName)
@@ -863,8 +863,8 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         self.invitateAlter = alterView
         let cancelButton: UIAlertAction = UIAlertAction.init(title: cancelStr, style: .cancel) { action in
             let dataDict: [String : AnyObject] = ["invitationID": invitationID as AnyObject]
-            if liveStreamingVC.config.enableCoHosting {
-                ZegoUIKit.getSignalingPlugin().refuseInvitation(inviterID, data: dataDict.live_jsonString)
+            if liveStreamingVC.config.enableSignalingPlugin {
+                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation(inviterID, data: dataDict.live_jsonString)
             }
             liveStreamingVC.addOrRemoveAudienceReceiveInviteList(ZegoUIKitUser.init(inviterID, ""), isAdd: false)
         }
@@ -875,8 +875,8 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             liveStreamingVC.updateConfigMenuBar(.coHost)
             ZegoUIKit.shared.turnCameraOn(liveStreamingVC.userID ?? "", isOn: true)
             ZegoUIKit.shared.turnMicrophoneOn(liveStreamingVC.userID ?? "", isOn: true)
-            if liveStreamingVC.config.enableCoHosting {
-                ZegoUIKit.getSignalingPlugin().acceptInvitation(inviterID, data: nil, callback: nil)
+            if liveStreamingVC.config.enableSignalingPlugin {
+                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.acceptInvitation(inviterID, data: nil, callback: nil)
             }
         }
         alterView.addAction(cancelButton)
@@ -1023,8 +1023,8 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 guard let host = liveStreamingVC.currentHost else { return }
                 ZegoLiveStreamTipView.showTip(liveStreamingVC.config.translationText.sendRequestCoHostToast, onView: liveStreamingVC.view)
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: true)
-                if liveStreamingVC.config.enableCoHosting {
-                    ZegoUIKit.getSignalingPlugin().sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                if liveStreamingVC.config.enableSignalingPlugin {
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) { data in
                         guard let data = data else { return }
                         if data["code"] as! Int != 0 {
                             ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.requestCoHostFailed, onView: liveStreamingVC.view)
@@ -1038,8 +1038,8 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             guard let host = liveStreamingVC.currentHost else { return }
             liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
             liveStreamingVC.bottomBar.isCoHost = false
-            if liveStreamingVC.config.enableCoHosting {
-                ZegoUIKit.getSignalingPlugin().cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
+            if liveStreamingVC.config.enableSignalingPlugin {
+                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
             }
         case .endCoHost:
             self.showEndConnectionAlter(sender)
@@ -1082,13 +1082,13 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 var cancelList: [String] = []
                 for user in liveStreamingVC.hostInviteList {
                     cancelList.append(user.userID ?? "")
-                    if liveStreamingVC.config.enableCoHosting {
-                        ZegoUIKit.getSignalingPlugin().cancelInvitation(cancelList, data: nil, callback: nil)
+                    if liveStreamingVC.config.enableSignalingPlugin {
+                        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation(cancelList, data: nil, callback: nil)
                     }
                 }
             } else {
-                if liveStreamingVC.config.enableCoHosting {
-                    ZegoUIKit.getSignalingPlugin().cancelInvitation([liveStreamingVC.currentHost?.userID ?? ""], data: nil, callback: nil)
+                if liveStreamingVC.config.enableSignalingPlugin {
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation([liveStreamingVC.currentHost?.userID ?? ""], data: nil, callback: nil)
                 }
             }
             
@@ -1177,11 +1177,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 guard let host = liveStreamingVC.currentHost else { return }
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
                 liveStreamingVC.bottomBar.isCoHost = false
-                if liveStreamingVC.config.enableCoHosting {
-                    ZegoUIKit.getSignalingPlugin().cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
+                if liveStreamingVC.config.enableSignalingPlugin {
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
                 }
             }
-            
         }
     }
     

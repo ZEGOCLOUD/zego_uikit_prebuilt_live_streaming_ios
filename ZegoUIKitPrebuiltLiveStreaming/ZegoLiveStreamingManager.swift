@@ -7,6 +7,7 @@
 
 import UIKit
 import ZegoUIKit
+import ZegoPluginAdapter
 
 public typealias UserRequestCallback = (_ errorCode: Int, _ requestID: String) -> ()
 
@@ -89,7 +90,7 @@ public class ZegoLiveStreamingManager: NSObject {
             return ZegoUIKit.shared.getRoomProperties()["live_status"] == "1"
         }
     }
-    var enableCohost: Bool = false
+    var enableSignalingPlugin: Bool = false
     
     private var pkService: PKService?
     
@@ -100,21 +101,33 @@ public class ZegoLiveStreamingManager: NSObject {
         pkService?.addPKDelegate(self)
     }
     
+    func getSignalingPlugin() -> ZegoUIKitSignalingPluginImpl? {
+        if enableSignalingPlugin {
+            let plugin = ZegoUIKit.getSignalingPlugin().getPlugin(.signaling)
+            guard let plugin = plugin else {
+                fatalError("signalingPlugin cannot be nil")
+            }
+            return ZegoUIKit.getSignalingPlugin()
+        } else {
+            return nil
+        }
+    }
+    
     public func addLiveManagerDelegate(_ delegate: ZegoLiveStreamingManagerDelegate) {
         eventDelegates.add(delegate)
     }
     
-    public func initWithAppID(appID: UInt32, appSign: String, enableCoHost: Bool) {
-        self.enableCohost = enableCoHost
+    public func initWithAppID(appID: UInt32, appSign: String, enableSignalingPlugin: Bool) {
+        self.enableSignalingPlugin = enableSignalingPlugin
         ZegoUIKit.shared.initWithAppID(appID: appID, appSign: appSign)
-        if enableCoHost {
-            ZegoUIKit.getSignalingPlugin().initWithAppID(appID: appID, appSign: appSign)
+        if enableSignalingPlugin {
+            getSignalingPlugin()?.initWithAppID(appID: appID, appSign: appSign)
         }
     }
     
     public func login(userID: String, userName: String, callback: PluginCallBack?) {
-        if enableCohost {
-            ZegoUIKit.getSignalingPlugin().login(userID, userName: userName, callback: callback)
+        if enableSignalingPlugin {
+            getSignalingPlugin()?.login(userID, userName: userName, callback: callback)
         } else {
             ZegoUIKit.shared.login(userID, userName: userName)
             guard let callback = callback else { return }
@@ -125,8 +138,8 @@ public class ZegoLiveStreamingManager: NSObject {
     
     public func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool) {
         ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: roomID, markAsLargeRoom: markAsLargeRoom)
-        if enableCohost {
-            ZegoUIKit.getSignalingPlugin().joinRoom(roomID: roomID, callback: nil)
+        if enableSignalingPlugin {
+            getSignalingPlugin()?.joinRoom(roomID: roomID, callback: nil)
         }
     }
     
@@ -226,7 +239,7 @@ public class ZegoLiveStreamingManager: NSObject {
         }
         pkService?.clearData()
         ZegoUIKit.shared.leaveRoom()
-        if enableCohost {
+        if enableSignalingPlugin {
             ZegoUIKit.getSignalingPlugin().leaveRoom { data in
                 ZegoUIKit.getSignalingPlugin().loginOut()
             }
