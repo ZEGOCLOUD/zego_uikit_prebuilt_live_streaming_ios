@@ -8,16 +8,28 @@
 import UIKit
 import ZegoUIKit
 
-@objc public protocol ZegoUIKitPrebuiltLiveStreamingVCDelegate: AnyObject {
-    @objc optional func getForegroundView(_ userInfo: ZegoUIKitUser?) -> ZegoBaseAudioVideoForegroundView?
-    @objc optional func onLeaveLiveStreaming()
-    @objc optional func onLiveStreamingEnded()
-    @objc optional func onStartLiveButtonPressed()
+extension ZegoUIKitPrebuiltLiveStreamingVC: LiveStreamingVCApi {
     
-    @objc optional func getPKBattleForegroundView(_ parentView: UIView, userInfo: ZegoUIKitUser) -> UIView?
-    @objc optional func getPKBattleTopView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView?
-    @objc optional func getPKBattleBottomView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView?
+    public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
+        self.bottomBar.addButtonToMenuBar(button, role: role)
+    }
+    
+    public func setStartLiveButton(_ button: ZegoStartLiveButton) {
+        self.startLiveButton?.removeFromSuperview()
+        self.startLiveButton = button
+        self.startLiveButton?.delegate = self.help
+        self.view.addSubview(self.startLiveButton!)
+    }
+    
+    public func clearBottomMenuBarExtendButtons(_ role: ZegoLiveStreamingRole) {
+        self.bottomBar.clearBottomBarExtendButtons(role)
+    }
+    
+    public func setBackgroundView(_ view: UIView) {
+        self.backgroundView.setCustomBackGroundView(view: view)
+    }
 }
+
 
 public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
@@ -320,16 +332,6 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.setupLayout()
     }
     
-    @objc public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
-        self.bottomBar.addButtonToMenuBar(button, role: role)
-    }
-    
-    public func setStartLiveButton(_ button: ZegoStartLiveButton) {
-        self.startLiveButton?.removeFromSuperview()
-        self.startLiveButton = button
-        self.startLiveButton?.delegate = self.help
-        self.view.addSubview(self.startLiveButton!)
-    }
     
     @objc func keyboardWillChangeFrame(node : Notification){
             print(node.userInfo ?? "")
@@ -394,14 +396,6 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         self.view.endEditing(true)
-    }
-    
-    public func clearBottomMenuBarExtendButtons(_ role: ZegoLiveStreamingRole) {
-        self.bottomBar.clearBottomBarExtendButtons(role)
-    }
-    
-    public func setBackgroundView(_ view: UIView) {
-        self.backgroundView.setCustomBackGroundView(view: view)
     }
     
 //    func updateHostProporty(_ isHost: Bool) {

@@ -11,50 +11,84 @@ import ZegoPluginAdapter
 
 public typealias UserRequestCallback = (_ errorCode: Int, _ requestID: String) -> ()
 
-@objc public protocol ZegoLiveStreamingManagerDelegate: AnyObject {
+
+extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
     
-    @objc optional func onIncomingCohostRequest(inviter: ZegoUIKitUser)
-    @objc optional func onIncomingInviteToCohostRequest(inviter: ZegoUIKitUser, invitationID: String)
-    @objc optional func onIncomingRemoveCohostRequest(inviter: ZegoUIKitUser)
-    @objc optional func onIncomingAcceptCohostRequest(invitee: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingCancelCohostRequest(inviter: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingCancelCohostInvite(inviter: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingRefuseCohostRequest(invitee: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingRefuseCohostInvite(invitee: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingCohostRequestTimeOut(inviter: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingCohostInviteTimeOut(inviter: ZegoUIKitUser, data: String?)
-    @objc optional func onIncomingCohostInviteResponseTimeOut(invitees: [ZegoUIKitUser], data: String?)
-    @objc optional func onIncomingCohostRequestResponseTimeOut(invitees: [ZegoUIKitUser], data: String?)
+    public func addLiveManagerDelegate(_ delegate: ZegoLiveStreamingManagerDelegate) {
+        eventDelegates.add(delegate)
+    }
+    
+    public func getHostID() -> String {
+        guard let hostID = ZegoUIKit.shared.getRoomProperties()["host"] else { return "" }
+        return hostID
+    }
+    
+    public func isHost(_ userID: String) -> Bool {
+        return userID == getHostID()
+    }
+    
+    public func isCurrentUserHost() -> Bool {
+        let localUser = ZegoUIKit.shared.localUserInfo
+        return localUser?.userID == getHostID()
+    }
+    
+    public func isCurrentUserCoHost() -> Bool {
+        let localUser = ZegoUIKit.shared.localUserInfo
+        return localUser != nil && localUser!.userID != getHostID() && (localUser!.isCameraOn || localUser!.isMicrophoneOn);
+    }
+    
+    public func stopPKBattle() {
+        pkService?.sendPKBattlesStopRequest()
+    }
+    
+    public func acceptIncomingPKBattleRequest(_ requestID: String, anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser, customData: String) {
+        pkService?.acceptPKStartRequest(requestID: requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser, customData: customData)
+    }
+
+    public func acceptIncomingPKBattleRequest(_ requestID: String, anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser) {
+        pkService?.acceptPKStartRequest(requestID: requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser, customData: nil)
+    }
+    
+    public func rejectPKBattleStartRequest(_ requestID: String) {
+        pkService?.rejectPKStartRequest(requestID: requestID, rejectCode: ZegoLiveStreamingPKBattleRejectCode.host_reject.rawValue)
+    }
+
+    
+    public func muteAnotherHostAudio(_ mute: Bool, callback: ZegoUIKitCallBack?) {
+        pkService?.muteAnotherHostAudio(mute: mute, callback: callback)
+    }
     
     
-    @objc optional func onIncomingPKRequestReceived(requestID: String, anotherHostUser: ZegoUIKitUser, anotherHostLiveID: String, customData: String?)
-    @objc optional func onIncomingResumePKRequestReceived(requestID: String)
-    @objc optional func onIncomingPKRequestCancelled(anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser, customData: String?)
-    @objc optional func onOutgoingPKRequestAccepted(anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser, customData: String?)
-    @objc optional func onOutgoingPKRequestRejected(reason: Int, anotherHostUser: ZegoUIKitUser)
-    @objc optional func onIncomingPKRequestTimeout(requestID: String, anotherHostUser: ZegoUIKitUser)
-    @objc optional func onOutgoingPKRequestTimeout(requestID: String, anotherHost: ZegoUIKitUser)
+    public func sendPKBattleRequest(anotherHostUserID: String,
+                                    timeout: UInt32 = 60,
+                                    customData: String,
+                                    callback: UserRequestCallback?) {
+        pkService?.sendPKBattlesStartRequest(anotherHostUserID: anotherHostUserID, timeout: timeout, customData: customData, callback: callback)
+    }
+
+    public func sendPKBattleRequest(anotherHostUserID: String, timeout: UInt32 = 60,callback: UserRequestCallback?) {
+        pkService?.sendPKBattlesStartRequest(anotherHostUserID: anotherHostUserID, timeout: timeout, customData: nil, callback: callback)
+    }
     
-    @objc optional func onPKStarted(roomID: String, userID: String)
-    @objc optional func onPKEnded()
-    @objc optional func onPKViewAvaliable()
+    public func cancelPKBattleRequest(customData: String?, callback: UserRequestCallback?) {
+        pkService?.cancelPKBattleRequest(customData: customData, callback: callback)
+    }
     
-    @objc optional func onLocalHostCameraStatus(isOn: Bool)
-    @objc optional func onAnotherHostCameraStatus(isOn: Bool)
-    
-    @objc optional func onAnotherHostIsReconnecting()
-    @objc optional func onAnotherHostIsConnected()
-    @objc optional func onHostIsReconnecting()
-    @objc optional func onHostIsConnected()
-    
-    @objc optional func onMixerStreamTaskFail(errorCode: Int)
-    @objc optional func onStartPlayMixerStream()
-    @objc optional func onStopPlayMixerStream()
-    @objc optional func onOtherHostMuted(userID: String, mute: Bool)
-    
-    @objc optional func showTopTips(tips: String, green: Bool)
+    public func leaveRoom() {
+        if currentRole == .host {
+            stopPKBattle()
+        }
+        pkService?.clearData()
+        ZegoUIKit.shared.leaveRoom()
+        if enableSignalingPlugin {
+            ZegoUIKit.getSignalingPlugin().leaveRoom { data in
+                ZegoUIKit.getSignalingPlugin().loginOut()
+            }
+        }
+    }
     
 }
+
 
 public class ZegoLiveStreamingManager: NSObject {
     
@@ -113,11 +147,7 @@ public class ZegoLiveStreamingManager: NSObject {
         }
     }
     
-    public func addLiveManagerDelegate(_ delegate: ZegoLiveStreamingManagerDelegate) {
-        eventDelegates.add(delegate)
-    }
-    
-    public func initWithAppID(appID: UInt32, appSign: String, enableSignalingPlugin: Bool) {
+    func initWithAppID(appID: UInt32, appSign: String, enableSignalingPlugin: Bool) {
         self.enableSignalingPlugin = enableSignalingPlugin
         ZegoUIKit.shared.initWithAppID(appID: appID, appSign: appSign)
         if enableSignalingPlugin {
@@ -125,7 +155,7 @@ public class ZegoLiveStreamingManager: NSObject {
         }
     }
     
-    public func login(userID: String, userName: String, callback: PluginCallBack?) {
+    func login(userID: String, userName: String, callback: PluginCallBack?) {
         if enableSignalingPlugin {
             getSignalingPlugin()?.login(userID, userName: userName, callback: callback)
         } else {
@@ -136,115 +166,49 @@ public class ZegoLiveStreamingManager: NSObject {
         }
     }
     
-    public func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool) {
+    func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool) {
         ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: roomID, markAsLargeRoom: markAsLargeRoom)
         if enableSignalingPlugin {
             getSignalingPlugin()?.joinRoom(roomID: roomID, callback: nil)
         }
-    }
-    
-    public func getHostID() -> String {
-        guard let hostID = ZegoUIKit.shared.getRoomProperties()["host"] else { return "" }
-        return hostID
-    }
-    
-    public func isHost(_ userID: String) -> Bool {
-        return userID == getHostID()
-    }
-    
-    public func isCurrentUserHost() -> Bool {
-        let localUser = ZegoUIKit.shared.localUserInfo
-        return localUser?.userID == getHostID()
-    }
-    
-    public func isCurrentUserCoHost() -> Bool {
-        let localUser = ZegoUIKit.shared.localUserInfo
-        return localUser != nil && localUser!.userID != getHostID() && (localUser!.isCameraOn || localUser!.isMicrophoneOn);
-    }
-    
-    public func stopPKBattle() {
-        pkService?.sendPKBattlesStopRequest()
     }
 
     func stopPKBattleInner() {
         pkService?.stopPK();
     }
     
-    public func acceptIncomingPKBattleRequest(_ requestID: String, anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser, customData: String) {
-        pkService?.acceptPKStartRequest(requestID: requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser, customData: customData)
-    }
 
-    public func acceptIncomingPKBattleRequest(_ requestID: String, anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser) {
-        pkService?.acceptPKStartRequest(requestID: requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser, customData: nil)
-    }
-
-    public func rejectPKBattleStartRequest(_ requestID: String) {
-        pkService?.rejectPKStartRequest(requestID: requestID, rejectCode: ZegoLiveStreamingPKBattleRejectCode.host_reject.rawValue)
+    func startPKBattleWith(anotherHostLiveID: String, anotherHostUserID: String, anotherHostName: String) {
+        pkService?.startPKBattleWith(anotherHostLiveID: anotherHostLiveID, anotherHostUserID: anotherHostUserID, anotherHostName: anotherHostName)
     }
     
     public func isPKUser(userID: String) -> Bool {
         return false
     }
 
-    public func muteAnotherHostAudio(_ mute: Bool, callback: ZegoUIKitCallBack?) {
-        pkService?.muteAnotherHostAudio(mute: mute)
-    }
-    
-
-    public func sendPKBattleRequest(anotherHostUserID: String,
-                                    timeout: UInt32 = 60,
-                                    customData: String,
-                                    callback: UserRequestCallback?) {
-        pkService?.sendPKBattlesStartRequest(anotherHostUserID: anotherHostUserID, timeout: timeout, customData: customData, callback: callback)
-    }
-
-    public func sendPKBattleRequest(anotherHostUserID: String, timeout: UInt32 = 60,callback: UserRequestCallback?) {
-        pkService?.sendPKBattlesStartRequest(anotherHostUserID: anotherHostUserID, timeout: timeout, customData: nil, callback: callback)
-    }
-
-    public func cancelPKBattleRequest(customData: String?, callback: UserRequestCallback?) {
-        pkService?.cancelPKBattleRequest(customData: customData, callback: callback)
-    }
-
-    public func startPKBattleWith(anotherHostLiveID: String, anotherHostUserID: String, anotherHostName: String) {
-        pkService?.startPKBattleWith(anotherHostLiveID: anotherHostLiveID, anotherHostUserID: anotherHostUserID, anotherHostName: anotherHostName)
-    }
-
-    public func removeRoomData() {
-        //pkService.removeRoomData();
-    }
-
-    public func removeUserData() {
+//    public func removeRoomData() {
+//        //pkService.removeRoomData()
+//    }
+//
+//    public func removeUserData() {
 //        pkService.removeUserData();
 //        userStatusMap.clear();
-    }
+//    }
 
-    public func generateCameraStreamID(roomID: String, userID: String) -> String {
+    func generateCameraStreamID(roomID: String, userID: String) -> String {
         return roomID + "_" + userID + "_main"
     }
 
-    public func startPublishingStream() {
+    func startPublishingStream() {
         let currentRoomID = ZegoUIKit.shared.room?.roomID ?? ""
         let streamID = generateCameraStreamID(roomID: currentRoomID, userID: ZegoUIKit.shared.localUserInfo?.userID ?? "")
         ZegoUIKit.shared.startPublishingStream(streamID)
     }
 
-    public func stopPublishStream() {
+    func stopPublishStream() {
         ZegoUIKit.shared.stopPublishingStream()
     }
 
-    public func leaveRoom() {
-        if currentRole == .host {
-            stopPKBattle()
-        }
-        pkService?.clearData()
-        ZegoUIKit.shared.leaveRoom()
-        if enableSignalingPlugin {
-            ZegoUIKit.getSignalingPlugin().leaveRoom { data in
-                ZegoUIKit.getSignalingPlugin().loginOut()
-            }
-        }
-    }
 }
 
 extension ZegoLiveStreamingManager: ZegoUIKitEventHandle, PKServiceDelegate {

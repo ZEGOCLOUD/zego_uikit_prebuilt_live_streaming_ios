@@ -336,10 +336,20 @@ extension PKService: ZegoUIKitEventHandle {
     }
 
     
-    func muteAnotherHostAudio(mute: Bool, isReConnecting: Bool = false) {
-        guard let pkInfo = currentPKInfo else { return }
+    func muteAnotherHostAudio(mute: Bool, isReConnecting: Bool = false, callback: ZegoUIKitCallBack?) {
+        guard let pkInfo = currentPKInfo else {
+            if let callback = callback {
+                callback(["code" : -9999 as AnyObject])
+            }
+            return
+        }
         ZegoUIKit.shared.mutePlayStreamAudio(streamID: pkInfo.getPKStreamID(), mute: mute)
-        if mute == isMuteAnotherHostAudio { return }
+        if mute == isMuteAnotherHostAudio {
+            if let callback = callback {
+                callback(["code" : -9999 as AnyObject])
+            }
+            return
+        }
         startMixStreamTask(leftContentType: .video, rightContentType: mute ? .videoOnly : .video) { data in
             let code = data?["code"] as! Int
             if code == 0 {
@@ -351,6 +361,8 @@ extension PKService: ZegoUIKitEventHandle {
                     delegate.onOtherHostMuted?(userID: pkInfo.pkUser.userID ?? "", mute: mute)
                 }
             }
+            guard let callback = callback else { return }
+            callback(["code" : code as AnyObject])
         }
     }
     
@@ -388,7 +400,7 @@ extension PKService: ZegoUIKitEventHandle {
                     if key == self.currentPKInfo?.pkUser.userID {
                         for delegate in self.eventDelegates.allObjects {
                             delegate.onAnotherHostIsReconnecting?()
-                            self.muteAnotherHostAudio(mute: true, isReConnecting: true)
+                            self.muteAnotherHostAudio(mute: true, isReConnecting: true, callback: nil)
                         }
                     } else {
                         for delegate in self.eventDelegates.allObjects {
@@ -399,7 +411,7 @@ extension PKService: ZegoUIKitEventHandle {
                     if key == self.currentPKInfo?.pkUser.userID {
                         for delegate in self.eventDelegates.allObjects {
                             delegate.onAnotherHostIsConnected?()
-                            self.muteAnotherHostAudio(mute: self.isMuteAnotherHostAudio)
+                            self.muteAnotherHostAudio(mute: self.isMuteAnotherHostAudio, callback: nil)
                         }
                     } else {
                         for delegate in self.eventDelegates.allObjects {
@@ -411,7 +423,7 @@ extension PKService: ZegoUIKitEventHandle {
             if !isFindAnotherHostKey {
                 for delegate in self.eventDelegates.allObjects {
                     delegate.onAnotherHostIsReconnecting?()
-                    self.muteAnotherHostAudio(mute: true, isReConnecting: true)
+                    self.muteAnotherHostAudio(mute: true, isReConnecting: true, callback: nil)
                 }
             }
         })
