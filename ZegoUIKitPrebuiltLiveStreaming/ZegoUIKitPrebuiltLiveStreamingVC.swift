@@ -154,6 +154,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     lazy var messageView: ZegoInRoomMessageView = {
         let messageList = ZegoInRoomMessageView()
+        messageList.delegate = self.help
         return messageList
     }()
     
@@ -628,7 +629,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
 }
 
-class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate, ZegoStartLiveButtonDelegate, ZegoLiveStreamingManagerDelegate, PKContainerDelegate {
+class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate, ZegoStartLiveButtonDelegate, ZegoLiveStreamingManagerDelegate, PKContainerDelegate, ZegoInRoomMessageViewDelegate {
     
     
     weak var liveStreamingVC: ZegoUIKitPrebuiltLiveStreamingVC?
@@ -1206,6 +1207,11 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     func getPKBattleBottomView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView {
         return liveStreamingVC?.delegate?.getPKBattleBottomView?(parentView, userList: userList) ?? UIView()
+    }
+    
+    // MARK: Message
+    func onInRoomMessageClick(_ message: ZegoInRoomMessage) {
+        liveStreamingVC?.delegate?.onInRoomMessageClick?(message)
     }
 }
 
