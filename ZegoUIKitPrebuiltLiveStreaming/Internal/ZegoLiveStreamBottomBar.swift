@@ -120,7 +120,7 @@ class ZegoLiveStreamBottomBar: UIView {
     
     let itemSize: CGSize = CGSize.init(width: UIkitLiveAdaptLandscapeWidth(36), height: UIkitLiveAdaptLandscapeWidth(36))
     
-    public override init(frame: CGRect) {
+    override public init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
         self.addSubview(self.messageButton)
@@ -327,7 +327,8 @@ class ZegoLiveStreamBottomBar: UIView {
                     self.addSubview(leaveButtonComponent)
                 }
             case .coHostControlButton:
-                let coHostButton: ZegoCoHostControlButton = ZegoCoHostControlButton()
+                let coHostButton: ZegoCoHostControlButton = ZegoCoHostControlButton(frame: CGRectZero, translationText: self.config.translationText)
+                coHostButton.config = self.config
                 coHostButton.delegate = self
                 coHostButton.liveStatus = self.liveStatus
                 coHostButton.buttonType = self.isCoHost ? .endCoHost : .requestCoHost

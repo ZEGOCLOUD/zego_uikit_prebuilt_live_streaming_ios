@@ -118,11 +118,14 @@ class ZegoCoHostControlButton: UIView {
         }
     }
 
-    override init(frame: CGRect) {
+   public init(frame: CGRect,translationText:ZegoTranslationText?) {
         super.init(frame: frame)
         self.addSubview(self.requestCoHostButton)
         self.addSubview(self.cancelRequestButton)
         self.addSubview(self.endCoHostButton)
+       if let translationText = translationText {
+         self.config.translationText = translationText
+       }
     }
     
     required init?(coder: NSCoder) {
@@ -141,11 +144,11 @@ class ZegoCoHostControlButton: UIView {
 extension ZegoCoHostControlButton: ZegoCancelInvitationButtonDelegate, ZegoEndCoHostButtonDelegate, ZegoRequestCoHostButtonDelegate {
     
     func requestCoHostButtonDidClick() {
-        self.delegate?.coHostControlButtonDidClick(.requestCoHost, sender: self)
         if hostID != nil && liveStatus == "1" {
             self.buttonType = .cancelCoHost
             self.delegate?.coHostButtonTypeDidChange()
         }
+      self.delegate?.coHostControlButtonDidClick(.requestCoHost, sender: self)
     }
     
     func onCancelInvitationButtonClick() {

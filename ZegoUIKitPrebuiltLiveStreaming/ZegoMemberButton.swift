@@ -36,7 +36,7 @@ public class ZegoMemberButton: UIButton {
             self.memberListView?.coHostList = coHostList
         }
     }
-    var config: ZegoUIKitPrebuiltLiveStreamingConfig?
+    var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig()
     
     private let help: ZegoMemberButton_Help = ZegoMemberButton_Help()
     
@@ -69,7 +69,7 @@ public class ZegoMemberButton: UIButton {
         let listView: ZegoLiveStreamMemberList = ZegoLiveStreamMemberList()
         self.memberListView = listView
         listView.config = self.config
-        listView.translationText = self.config?.translationText
+        listView.translationText = self.config.translationText
         listView.coHostList = self.coHostList
         listView.requestCoHostList = self.requestCoHostList
         listView.currentHost = self.currentHost
@@ -101,24 +101,24 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
     var sheetListData: [String] {
         get {
             if self.isCoHost {
-                return [self.memberButton?.config?.translationText.removeCoHostButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                return [self.memberButton?.config.translationText.removeCoHostButton ?? "",self.memberButton?.config.translationText.cancelMenuDialogButton ?? ""]
             } else {
-                if let inviteCoHostButton = self.memberButton?.config?.translationText.inviteCoHostButton,
+                if let inviteCoHostButton = self.memberButton?.config.translationText.inviteCoHostButton,
                    let currentUser = currentUser,
                    let currentUserName = currentUser.userName
                 {
                     let newInviteCoHostButton = inviteCoHostButton.replacingOccurrences(of: "%@", with: currentUserName)
-                    let removeUserInfo = self.memberButton?.config?.translationText.removeUserMenuDialogButton.replacingOccurrences(of: "%@", with: currentUserName) ?? ""
+                    let removeUserInfo = self.memberButton?.config.translationText.removeUserMenuDialogButton.replacingOccurrences(of: "%@", with: currentUserName) ?? ""
                     if ZegoLiveStreamingManager.shared.pkState == .isStartPK {
-                        return [removeUserInfo,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                        return [removeUserInfo,self.memberButton?.config.translationText.cancelMenuDialogButton ?? ""]
                     } else {
-                        return [newInviteCoHostButton,removeUserInfo,self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                        return [newInviteCoHostButton,removeUserInfo,self.memberButton?.config.translationText.cancelMenuDialogButton ?? ""]
                     }
                 } else {
                     if ZegoLiveStreamingManager.shared.pkState == .isStartPK {
-                        return [self.memberButton?.config?.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                        return [self.memberButton?.config.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config.translationText.cancelMenuDialogButton ?? ""]
                     } else {
-                        return [self.memberButton?.config?.translationText.inviteCoHostButton ?? "",self.memberButton?.config?.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config?.translationText.cancelMenuDialogButton ?? ""]
+                        return [self.memberButton?.config.translationText.inviteCoHostButton ?? "",self.memberButton?.config.translationText.removeUserMenuDialogButton ?? "",self.memberButton?.config.translationText.cancelMenuDialogButton ?? ""]
                     }
                     
                 }
@@ -205,7 +205,7 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                         if hostInviteList.contains(where: {
                             return $0.userID == userID
                         }) {
-                            ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.repeatInviteCoHostFailedToast ?? "", onView: memberButton.controller?.view)
+                            ZegoLiveStreamTipView.showWarn(memberButton.config.translationText.repeatInviteCoHostFailedToast, onView: memberButton.controller?.view)
                             return
                         }
                     }
@@ -215,7 +215,7 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                         if data["code"] as! Int == 0 {
                             memberButton.delegate?.memberListDidClickInvitate(currentUser)
                         } else {
-                            ZegoLiveStreamTipView.showWarn(memberButton.config?.translationText.inviteCoHostFailedToast ?? "", onView: self.memberButton?.controller?.view)
+                            ZegoLiveStreamTipView.showWarn(memberButton.config.translationText.inviteCoHostFailedToast, onView: self.memberButton?.controller?.view)
                         }
                     }
                 }

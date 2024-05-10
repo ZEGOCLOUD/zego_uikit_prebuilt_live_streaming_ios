@@ -82,7 +82,8 @@ extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
         ZegoUIKit.shared.leaveRoom()
         if enableSignalingPlugin {
             ZegoUIKit.getSignalingPlugin().leaveRoom { data in
-                ZegoUIKit.getSignalingPlugin().loginOut()
+//                ZegoUIKit.getSignalingPlugin().loginOut()
+                ZegoUIKit.shared.removeEventHandler(self)
             }
         }
     }
@@ -130,7 +131,6 @@ public class ZegoLiveStreamingManager: NSObject {
     
     public override init() {
         super.init()
-        ZegoUIKit.shared.addEventHandler(self)
         pkService = PKService()
         pkService?.addPKDelegate(self)
     }
@@ -148,6 +148,7 @@ public class ZegoLiveStreamingManager: NSObject {
     }
     
     func initWithAppID(appID: UInt32, appSign: String, enableSignalingPlugin: Bool) {
+        ZegoUIKit.shared.addEventHandler(self)
         self.enableSignalingPlugin = enableSignalingPlugin
         ZegoUIKit.shared.initWithAppID(appID: appID, appSign: appSign)
         if enableSignalingPlugin {

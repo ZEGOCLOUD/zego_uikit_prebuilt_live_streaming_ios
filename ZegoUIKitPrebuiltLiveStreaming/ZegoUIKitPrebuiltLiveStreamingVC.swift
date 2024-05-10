@@ -93,7 +93,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     }()
     
     lazy var backgroundView: ZegoLiveStreamingBackGroundView = {
-        let view = ZegoLiveStreamingBackGroundView()
+        let view = ZegoLiveStreamingBackGroundView(frame: CGRectZero, config: self.config)
         return view
     }()
     
@@ -230,6 +230,11 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.userName = userName
         self.liveID = liveID
         self.config = config
+      
+        let zegoLanguage: ZegoLiveStreamLanguage = config.languageCode
+        let zegoUIKitLanguage = ZegoUIKitLanguage(rawValue: zegoLanguage.rawValue)!
+        ZegoUIKitTranslationTextConfig.shared.languageCode = zegoUIKitLanguage;
+      
         liveManager.addLiveManagerDelegate(self.help)
         liveManager.initWithAppID(appID: appID, appSign: appSign, enableSignalingPlugin: config.enableSignalingPlugin)
         ZegoUIKit.shared.addEventHandler(self.help)
@@ -849,10 +854,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         guard let liveStreamingVC = liveStreamingVC else {
             return
         }
-        let title: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfo.title ?? ""
-        let message: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfo.message ?? ""
-        let cancelStr: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfo.cancelButtonName
-        let sureStr: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfo.confirmButtonName
+        let title: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoTitle
+        let message: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoMessage
+        let cancelStr: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoCancel
+        let sureStr: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoConfirm
         
         let alterView: UIAlertController = UIAlertController.init(title: title, message: message, preferredStyle: .alert)
         self.invitateAlter = alterView
@@ -877,7 +882,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         alterView.addAction(cancelButton)
         alterView.addAction(sureButton)
         liveStreamingVC.present(alterView, animated: false, completion: nil)
-        
+        // 一分钟后隐藏视图
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
+          self.invitateAlter?.dismiss(animated: false)
+        }
     }
     
     func onIncomingAcceptCohostRequest(invitee: ZegoUIKitUser, data: String?) {
@@ -1016,6 +1024,12 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.requestCoHostFailed, onView: liveStreamingVC.view)
             } else if liveStreamingVC.liveStatus == "1" {
                 guard let host = liveStreamingVC.currentHost else { return }
+              if liveStreamingVC.pkBattleView?.isHidden == false {
+                //FIXME: pk中不可以申请连麦
+                ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.pkingNotRequestCoHost, onView: liveStreamingVC.view)
+                sender.buttonType = .requestCoHost
+                return
+              }
                 ZegoLiveStreamTipView.showTip(liveStreamingVC.config.translationText.sendRequestCoHostToast, onView: liveStreamingVC.view)
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: true)
                 if liveStreamingVC.config.enableSignalingPlugin {
@@ -1043,12 +1057,12 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     func showEndConnectionAlter(_ sender: ZegoCoHostControlButton) {
         guard let liveStreamingVC = liveStreamingVC else { return }
-        let alterView: UIAlertController = UIAlertController.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfo.title, message: liveStreamingVC.config.translationText.endConnectionDialogInfo.message, preferredStyle: .alert)
+        let alterView: UIAlertController = UIAlertController.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfoTitle, message: liveStreamingVC.config.translationText.endConnectionDialogInfoMessage, preferredStyle: .alert)
         self.invitateAlter = alterView
-        let cancelButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfo.cancelButtonName, style: .cancel) { action in
+        let cancelButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.cancelMenuDialogButton, style: .cancel) { action in
         }
         
-        let sureButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.endConnectionDialogInfo.confirmButtonName, style: .default) { action in
+        let sureButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.dialogOkText, style: .default) { action in
             sender.buttonType = .requestCoHost
             self.endCohostRequest()
         }

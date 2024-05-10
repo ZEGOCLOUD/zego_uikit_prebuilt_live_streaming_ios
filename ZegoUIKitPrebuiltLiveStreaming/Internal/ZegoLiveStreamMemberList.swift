@@ -18,7 +18,7 @@ class ZegoLiveStreamMemberList: UIView {
     
     weak var delegate: ZegoLiveStreamMemberListDelegate?
     
-    var translationText: ZegoTranslationText?
+    var translationText: ZegoTranslationText = ZegoTranslationText()
     
     var requestCoHostList: [ZegoUIKitUser]? {
         didSet {
@@ -141,6 +141,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
     func getMemberListItemView(_ tableView: UITableView, indexPath: IndexPath, userInfo: ZegoUIKitUser) -> UITableViewCell? {
         let cell: ZegoLiveStreamMemberListCell = tableView.dequeueReusableCell(withIdentifier: "ZegoLiveStreamMemberListCell") as! ZegoLiveStreamMemberListCell
         cell.selectionStyle = .none
+        cell.translationText = self.translationText
         cell.enableCoHosting = self.config?.enableCoHosting ?? true
         cell.delegate = self
         cell.user = userInfo
@@ -162,7 +163,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
         label.frame = CGRect(x: 16, y: 26, width: 150, height: 22)
         label.textColor = UIColor.white
         label.font = UIFont.systemFont(ofSize: 16)
-        label.text = String(format: "%@·%d", self.translationText?.memberListTitle ?? "Audience",ZegoUIKit.shared.getAllUsers().count)
+        label.text = String(format: "%@·%d", self.translationText.memberListTitle,ZegoUIKit.shared.getAllUsers().count)
         view.addSubview(label)
         return view
     }

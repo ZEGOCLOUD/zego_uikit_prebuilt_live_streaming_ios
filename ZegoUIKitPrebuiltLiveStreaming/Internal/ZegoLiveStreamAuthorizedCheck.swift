@@ -131,15 +131,15 @@ class ZegoLiveStreamAuthorizedCheck: NSObject {
         var cancelStr: String = ""
         var sureStr: String = ""
         if type == .cameraAlter {
-            title = text.cameraPermissionSettingDialogInfo.title ?? ""
-            message = text.cameraPermissionSettingDialogInfo.message ?? ""
-            cancelStr = text.cameraPermissionSettingDialogInfo.cancelButtonName
-            sureStr = text.cameraPermissionSettingDialogInfo.confirmButtonName
+            title = text.cameraPermissionSettingDialogInfoTitle
+            message = text.cameraPermissionSettingDialogInfoMessage
+            cancelStr = text.cancelMenuDialogButton
+            sureStr = text.cameraPermissionSettingDialogInfoConfirmButton
         } else if type == .micAlter {
-            title = text.microphonePermissionSettingDialogInfo.title ?? ""
-            message = text.microphonePermissionSettingDialogInfo.message ?? ""
-            cancelStr = text.microphonePermissionSettingDialogInfo.cancelButtonName
-            sureStr = text.microphonePermissionSettingDialogInfo.confirmButtonName
+            title = text.microphonePermissionSettingDialogInfoTitle
+            message = text.microphonePermissionSettingDialogInfoMessage
+            cancelStr = text.cancelMenuDialogButton
+            sureStr = text.cancelMenuDialogButton
         }
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let cancelAction = UIAlertAction(title: cancelStr, style: .cancel) { action in

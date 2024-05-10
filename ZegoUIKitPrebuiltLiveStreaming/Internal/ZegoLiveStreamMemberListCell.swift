@@ -17,7 +17,7 @@ protocol ZegoLiveStreamMemberListCellDelegate: AnyObject {
 class ZegoLiveStreamMemberListCell: UITableViewCell {
     
     weak var delegate: ZegoLiveStreamMemberListCellDelegate?
-    
+    public var translationText: ZegoTranslationText = ZegoTranslationText()
     var user: ZegoUIKitUser? {
         didSet {
             guard let userName = user?.userName else { return }
@@ -36,6 +36,9 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
             } else {
                 self.moreButton.isHidden = enableCoHosting ? false : true
             }
+          self.agreeButton.setTitle(self.translationText.receivedCoHostInvitationDialogInfoConfirm, for: .normal)
+          self.disAgreeButton.setTitle(self.translationText.receivedCoHostInvitationDialogInfoCancel, for: .normal)
+
         }
     }
     
@@ -97,7 +100,7 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
     lazy var agreeButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = UIColor.colorWithHexString("#A754FF")
-        button.setTitle("Agree", for: .normal)
+        button.setTitle(self.translationText.receivedCoHostInvitationDialogInfoConfirm, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.setTitleColor(UIColor.white, for: .normal)
         button.isHidden = true
@@ -108,7 +111,7 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
     lazy var disAgreeButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = UIColor.colorWithHexString("#FFFFFF", alpha: 0.1)
-        button.setTitle("Disagree", for: .normal)
+        button.setTitle(self.translationText.receivedCoHostInvitationDialogInfoCancel, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         button.setTitleColor(UIColor.colorWithHexString("#A7A6B7"), for: .normal)
         button.addTarget(self, action: #selector(disAgreeClick), for: .touchUpInside)
@@ -154,25 +157,25 @@ class ZegoLiveStreamMemberListCell: UITableViewCell {
     func setUserIdentity(_ isHost: Bool, isCoHost: Bool, isRequestCoHost: Bool) {
         if isHost {
             if self.user?.userID == ZegoUIKit.shared.localUserInfo?.userID {
-                identityLabel.text = "(You,Host)"
+              identityLabel.text = self.translationText.userIdentityYouHost
             } else {
-                identityLabel.text = "(Host)"
+              identityLabel.text = self.translationText.userIdentityHost
             }
         } else if isCoHost {
             if self.user?.userID == ZegoUIKit.shared.localUserInfo?.userID {
-                identityLabel.text = "(You,Co-host)"
+              identityLabel.text = self.translationText.userIdentityYouCoHost
             } else {
-                identityLabel.text = "(Co-host)"
+              identityLabel.text = self.translationText.userIdentityCoHost
             }
         } else if isRequestCoHost {
             if user?.userID == ZegoUIKit.shared.localUserInfo?.userID {
-                identityLabel.text = "(You)"
+                identityLabel.text = self.translationText.userIdentityYou
             } else {
                 identityLabel.text = ""
             }
         } else {
             if user?.userID == ZegoUIKit.shared.localUserInfo?.userID {
-                identityLabel.text = "(You)"
+                identityLabel.text = self.translationText.userIdentityYou
             } else {
                 identityLabel.text = ""
             }

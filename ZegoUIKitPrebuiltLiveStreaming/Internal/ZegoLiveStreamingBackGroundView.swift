@@ -81,8 +81,11 @@ class ZegoLiveStreamingBackGroundView: UIView {
     
     var customBackGroundView: UIView?
     
-    override init(frame: CGRect) {
+    public init(frame: CGRect,config: ZegoUIKitPrebuiltLiveStreamingConfig?) {
         super.init(frame: frame)
+        if  config != nil{
+          self.config = config
+        }
         self.addSubview(backgroundImageView)
         self.addSubview(roomTipLabel)
     }
