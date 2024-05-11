@@ -17,7 +17,7 @@ import ZegoUIKit
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     
     var role: ZegoLiveStreamingRole = .audience
-    public var translationText: ZegoTranslationText = ZegoTranslationText()
+    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .english)
     public var markAsLargeRoom: Bool = false
     public var audioVideoViewConfig: ZegoPrebuiltAudioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig()
     public var turnOnCameraWhenJoining: Bool = false
@@ -31,15 +31,7 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var enableCoHosting: Bool = false
     public var enableSignalingPlugin: Bool = false
     public var layout: ZegoLayout?
-    public var languageCode: ZegoLiveStreamLanguage = .english {
-      didSet{
-        if languageCode == .chinese {
-          translationText = ZegoTranslationTextZH();
-        } else {
-          translationText = ZegoTranslationText();
-        }
-      }
-    }
+  
     public lazy var confirmDialogInfo: ZegoLeaveConfirmDialogInfo? = {
       let leaveDiaglog = ZegoLeaveConfirmDialogInfo()
     
@@ -93,6 +85,9 @@ public class ZegoBottomMenuBarConfig: NSObject {
 }
 
 public class ZegoTranslationText: NSObject {
+  
+    var language :ZegoLiveStreamLanguage  = .english
+  
     public var startLiveStreamingButton: String = "Start"
     public var endCoHostButton: String = "End"
     public var requestCoHostButton: String = "Apply to co-host"
@@ -137,54 +132,59 @@ public class ZegoTranslationText: NSObject {
     public var userIdentityYou: String = "(You)"
     public var pkingNotRequestCoHost: String = "cannot apply coHost because PK"
 
-}
+    public init(language:ZegoLiveStreamLanguage) {
+      super.init()
+      self.language = language
+      if language == .chinese {
+        startLiveStreamingButton = "开始"
+        endCoHostButton = "结束"
+        requestCoHostButton = "申请连麦"
+        cancelRequestCoHostButton = "取消申请"
+        removeCoHostButton = "取消连麦"
+        cancelMenuDialogButton = "取消"
+        noHostOnline = "主播不在线。"
+        inviteCoHostButton = "邀请 %@ 连麦"
+        memberListTitle = "观众"
+        sendRequestCoHostToast = "您正在申请连麦，请等待确认。"
+        hostRejectCoHostRequestToast = "您的连麦申请已被拒绝。"
+        inviteCoHostFailedToast = "连麦失败，请重试。"
+        repeatInviteCoHostFailedToast = "您已发送连麦邀请，请等待确认。"
+        audienceRejectInvitationToast = "拒绝连麦。"
+        requestCoHostFailed = "申请连麦失败。"
+        removeUserMenuDialogButton = "将 %@ 踢出房间"
+        
+        cameraPermissionSettingDialogInfoTitle = "无法使用摄像头！"
+        cameraPermissionSettingDialogInfoMessage = "请在系统设置中启用摄像头访问！"
+        cameraPermissionSettingDialogInfoConfirmButton = "设置"
+      
+        microphonePermissionSettingDialogInfoTitle = "无法使用麦克风！!"
+        microphonePermissionSettingDialogInfoMessage = "请在系统设置中启用麦克风访问！"
+        
+        receivedCoHostInvitationDialogInfoTitle = "邀请"
+        receivedCoHostInvitationDialogInfoMessage = "房主邀请您上麦"
+        receivedCoHostInvitationDialogInfoConfirm = "同意"
+        receivedCoHostInvitationDialogInfoCancel = "不同意"
+        
+        endConnectionDialogInfoTitle = "结束连接"
+        endConnectionDialogInfoMessage = "您确定要结束连麦吗？"
 
-class ZegoTranslationTextZH : ZegoTranslationText {
-  override init() {
-    super.init()
-    startLiveStreamingButton = "开始"
-    endCoHostButton = "结束"
-    requestCoHostButton = "申请连麦"
-    cancelRequestCoHostButton = "取消申请"
-    removeCoHostButton = "取消连麦"
-    cancelMenuDialogButton = "取消"
-    noHostOnline = "主播不在线。"
-    inviteCoHostButton = "邀请 %@ 连麦"
-    memberListTitle = "观众"
-    sendRequestCoHostToast = "您正在申请连麦，请等待确认。"
-    hostRejectCoHostRequestToast = "您的连麦申请已被拒绝。"
-    inviteCoHostFailedToast = "连麦失败，请重试。"
-    repeatInviteCoHostFailedToast = "您已发送连麦邀请，请等待确认。"
-    audienceRejectInvitationToast = "拒绝连麦。"
-    requestCoHostFailed = "申请连麦失败。"
-    removeUserMenuDialogButton = "将 %@ 踢出房间"
-    
-    cameraPermissionSettingDialogInfoTitle = "无法使用摄像头！"
-    cameraPermissionSettingDialogInfoMessage = "请在系统设置中启用摄像头访问！"
-    cameraPermissionSettingDialogInfoConfirmButton = "设置"
+        leaveDialogTitle = "停止直播"
+        leaveDialogMessage = "您确定要停止直播吗？"
+        leaveDialogConfimText = "停止直播"
+        
+        dialogOkText = "确定"
+        userIdentityYouHost = "(我,房主)"
+        userIdentityHost = "(主播)"
+        userIdentityYouCoHost = "(我,连麦用户)"
+        userIdentityCoHost = "(连麦用户)"
+        userIdentityYou = "(我)"
+        pkingNotRequestCoHost = "pk中不可以申请连麦"
+     
+      }
+    }
   
-    microphonePermissionSettingDialogInfoTitle = "无法使用麦克风！!"
-    microphonePermissionSettingDialogInfoMessage = "请在系统设置中启用麦克风访问！"
-    
-    receivedCoHostInvitationDialogInfoTitle = "邀请"
-    receivedCoHostInvitationDialogInfoMessage = "房主邀请您上麦"
-    receivedCoHostInvitationDialogInfoConfirm = "同意"
-    receivedCoHostInvitationDialogInfoCancel = "不同意"
-    
-    endConnectionDialogInfoTitle = "结束连接"
-    endConnectionDialogInfoMessage = "您确定要结束连麦吗？"
-
-    leaveDialogTitle = "停止直播"
-    leaveDialogMessage = "您确定要停止直播吗？"
-    leaveDialogConfimText = "停止直播"
-    
-    dialogOkText = "确定"
-    userIdentityYouHost = "(我,房主)"
-    userIdentityHost = "(主播)"
-    userIdentityYouCoHost = "(我,连麦用户)"
-    userIdentityCoHost = "(连麦用户)"
-    userIdentityYou = "(我)"
-    pkingNotRequestCoHost = "pk中不可以申请连麦"
+  public func getLanguage() -> ZegoLiveStreamLanguage {
+    return self.language
   }
 }
 
@@ -193,14 +193,12 @@ public class ZegoDialogInfo: NSObject {
     public var message: String?
     public var cancelButtonName: String?
     public var confirmButtonName: String?
-    public var translationText: ZegoTranslationText = ZegoTranslationText()
-    public init(_ title: String, message: String, cancelButtonName: String? , confirmButtonName: String? ,languageCode: ZegoLiveStreamLanguage) {
+    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .english)
+    public init(_ title: String, message: String, cancelButtonName: String? , confirmButtonName: String? ,language: ZegoLiveStreamLanguage) {
         self.title = title
         self.message = message
-        if languageCode == .chinese {
-          translationText = ZegoTranslationTextZH();
-        } else {
-          translationText = ZegoTranslationText();
+        if language == .chinese {
+          translationText = ZegoTranslationText(language: .chinese)
         }
         self.cancelButtonName = cancelButtonName ?? translationText.cancelMenuDialogButton
         self.confirmButtonName = confirmButtonName ?? translationText.dialogOkText

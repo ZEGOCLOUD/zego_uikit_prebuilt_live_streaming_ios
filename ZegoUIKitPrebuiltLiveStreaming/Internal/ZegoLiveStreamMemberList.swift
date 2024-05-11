@@ -18,7 +18,7 @@ class ZegoLiveStreamMemberList: UIView {
     
     weak var delegate: ZegoLiveStreamMemberListDelegate?
     
-    var translationText: ZegoTranslationText = ZegoTranslationText()
+    var translationText: ZegoTranslationText = ZegoTranslationText(language: .english)
     
     var requestCoHostList: [ZegoUIKitUser]? {
         didSet {

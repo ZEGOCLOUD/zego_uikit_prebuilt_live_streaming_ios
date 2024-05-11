@@ -17,7 +17,7 @@ protocol ZegoLiveStreamMemberListCellDelegate: AnyObject {
 class ZegoLiveStreamMemberListCell: UITableViewCell {
     
     weak var delegate: ZegoLiveStreamMemberListCellDelegate?
-    public var translationText: ZegoTranslationText = ZegoTranslationText()
+    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .english)
     var user: ZegoUIKitUser? {
         didSet {
             guard let userName = user?.userName else { return }
