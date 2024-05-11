@@ -17,7 +17,7 @@ import ZegoUIKit
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     
     var role: ZegoLiveStreamingRole = .audience
-    var translationText: ZegoTranslationText = ZegoTranslationText()
+    public var translationText: ZegoTranslationText = ZegoTranslationText()
     public var markAsLargeRoom: Bool = false
     public var audioVideoViewConfig: ZegoPrebuiltAudioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig()
     public var turnOnCameraWhenJoining: Bool = false
