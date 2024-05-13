@@ -8,16 +8,11 @@
 import UIKit
 import ZegoUIKit
 
-@objc public enum ZegoLiveStreamLanguage : UInt32 {
-  case english
-  case chinese
-}
-
 @objcMembers
 public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     
     var role: ZegoLiveStreamingRole = .audience
-    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .english)
+    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .ENGLISH)
     public var markAsLargeRoom: Bool = false
     public var audioVideoViewConfig: ZegoPrebuiltAudioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig()
     public var turnOnCameraWhenJoining: Bool = false
@@ -86,7 +81,7 @@ public class ZegoBottomMenuBarConfig: NSObject {
 
 public class ZegoTranslationText: NSObject {
   
-    var language :ZegoLiveStreamLanguage  = .english
+    var language :ZegoUIKitLanguage  = .ENGLISH
   
     public var startLiveStreamingButton: String = "Start"
     public var endCoHostButton: String = "End"
@@ -132,10 +127,10 @@ public class ZegoTranslationText: NSObject {
     public var userIdentityYou: String = "(You)"
     public var pkingNotRequestCoHost: String = "cannot apply coHost because PK"
 
-    public init(language:ZegoLiveStreamLanguage) {
+    public init(language:ZegoUIKitLanguage) {
       super.init()
       self.language = language
-      if language == .chinese {
+      if language == .CHS {
         startLiveStreamingButton = "开始"
         endCoHostButton = "结束"
         requestCoHostButton = "申请连麦"
@@ -183,7 +178,7 @@ public class ZegoTranslationText: NSObject {
       }
     }
   
-  public func getLanguage() -> ZegoLiveStreamLanguage {
+  public func getLanguage() -> ZegoUIKitLanguage {
     return self.language
   }
 }
@@ -193,12 +188,12 @@ public class ZegoDialogInfo: NSObject {
     public var message: String?
     public var cancelButtonName: String?
     public var confirmButtonName: String?
-    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .english)
-    public init(_ title: String, message: String, cancelButtonName: String? , confirmButtonName: String? ,language: ZegoLiveStreamLanguage) {
+    public var translationText: ZegoTranslationText = ZegoTranslationText(language: .ENGLISH)
+    public init(_ title: String, message: String, cancelButtonName: String? , confirmButtonName: String? ,language: ZegoUIKitLanguage) {
         self.title = title
         self.message = message
-        if language == .chinese {
-          translationText = ZegoTranslationText(language: .chinese)
+        if language == .CHS {
+          translationText = ZegoTranslationText(language: .CHS)
         }
         self.cancelButtonName = cancelButtonName ?? translationText.cancelMenuDialogButton
         self.confirmButtonName = confirmButtonName ?? translationText.dialogOkText

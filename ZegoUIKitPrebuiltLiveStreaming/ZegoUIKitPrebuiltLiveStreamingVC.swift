@@ -231,7 +231,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.liveID = liveID
         self.config = config
       
-        let zegoLanguage: ZegoLiveStreamLanguage = config.translationText.getLanguage()
+        let zegoLanguage: ZegoUIKitLanguage = config.translationText.getLanguage()
         let zegoUIKitLanguage = ZegoUIKitLanguage(rawValue: zegoLanguage.rawValue)!
         ZegoUIKitTranslationTextConfig.shared.translationText = ZegoUIKitTranslationText(language: zegoUIKitLanguage);
       

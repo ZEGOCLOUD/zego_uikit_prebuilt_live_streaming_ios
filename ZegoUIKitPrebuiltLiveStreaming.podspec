@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "ZegoUIKitPrebuiltLiveStreaming"
-  spec.version      = "2.8.2"
+  spec.version      = "2.8.3"
   spec.summary      = "ZegoUIKitPrebuiltLiveStreaming iOS SDK."
 
   # This description is used to generate tags and improve search results.
