@@ -578,7 +578,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
 //        self.bottomBar.config = self.config
     }
     
-    func addOrRmoveSeatListUser(_ user: ZegoUIKitUser, isAdd: Bool) {
+    func addOrRemoveSeatListUser(_ user: ZegoUIKitUser, isAdd: Bool) {
         if isAdd {
             self.audienceSeatList.append(user)
         } else {
@@ -698,7 +698,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 }
                 index = index + 1
             }
-            liveStreamingVC.addOrRmoveSeatListUser(user, isAdd: false)
+            liveStreamingVC.addOrRemoveSeatListUser(user, isAdd: false)
             liveStreamingVC.addOrRemoveHostInviteList(user, isAdd: false)
         }
 //        if liveStreamingVC.coHostList.count == 0 && liveStreamingVC.liveStatus != "1" {
@@ -825,7 +825,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     func onIncomingCohostRequest(inviter: ZegoUIKitUser) {
         if liveStreamingVC?.liveManager.currentRole == .host {
-            liveStreamingVC?.addOrRmoveSeatListUser(inviter, isAdd: true)
+            liveStreamingVC?.addOrRemoveSeatListUser(inviter, isAdd: true)
         }
     }
     
@@ -905,7 +905,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         guard let liveStreamingVC = liveStreamingVC else {
             return
         }
-        liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: false)
+        liveStreamingVC.addOrRemoveSeatListUser(inviter, isAdd: false)
     }
     
     func onIncomingCancelCohostInvite(inviter: ZegoUIKitUser, data: String?) {
@@ -921,7 +921,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         let user: ZegoUIKitUser? = ZegoUIKit.shared.getUser(invitee.userID ?? "")
         guard let user = user else { return }
         ZegoLiveStreamTipView.showWarn(String(format: "%@ %@", user.userName ?? "",liveStreamingVC.config.translationText.audienceRejectInvitationToast), onView: liveStreamingVC.view)
-        liveStreamingVC.addOrRmoveSeatListUser(invitee, isAdd: false)
+        liveStreamingVC.addOrRemoveSeatListUser(invitee, isAdd: false)
         liveStreamingVC.addOrRemoveHostInviteList(invitee, isAdd: false)
     }
     
@@ -936,7 +936,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         guard let liveStreamingVC = liveStreamingVC else {
             return
         }
-        liveStreamingVC.addOrRmoveSeatListUser(inviter, isAdd: false)
+        liveStreamingVC.addOrRemoveSeatListUser(inviter, isAdd: false)
     }
     
     func onIncomingCohostRequestTimeOut(inviter: ZegoUIKitUser, data: String?) {
@@ -1123,7 +1123,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     }
     
     func memberListDidClickDisagree(_ user: ZegoUIKitUser) {
-        self.liveStreamingVC?.addOrRmoveSeatListUser(user, isAdd: false)
+        self.liveStreamingVC?.addOrRemoveSeatListUser(user, isAdd: false)
     }
     
     func memberListDidClickInvitate(_ user: ZegoUIKitUser) {

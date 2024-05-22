@@ -157,7 +157,7 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
         return 70
     }
     
-    func getMemberListviewForHeaderInSection(_ tableView: UITableView, section: Int) -> UIView? {
+    func getMemberListViewForHeaderInSection(_ tableView: UITableView, section: Int) -> UIView? {
         let view = UIView()
         let label = UILabel()
         label.frame = CGRect(x: 16, y: 26, width: 150, height: 22)
