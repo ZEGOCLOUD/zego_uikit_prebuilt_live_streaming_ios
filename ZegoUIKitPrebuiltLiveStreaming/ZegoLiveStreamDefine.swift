@@ -57,7 +57,7 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case toggleCameraButton
     case toggleMicrophoneButton
     case switchCameraButton
-    case swtichAudioOutputButton
+    case switchAudioOutputButton
     case coHostControlButton
     case enableChatButton
 }

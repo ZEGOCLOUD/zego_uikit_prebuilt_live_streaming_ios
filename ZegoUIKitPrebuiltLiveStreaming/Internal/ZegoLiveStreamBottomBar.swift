@@ -306,7 +306,7 @@ class ZegoLiveStreamBottomBar: UIView {
                     self.buttons.append(micButtonComponent)
                     self.addSubview(micButtonComponent)
                 }
-            case .swtichAudioOutputButton:
+            case .switchAudioOutputButton:
                 let audioOutputButtonComponent: ZegoSwitchAudioOutputButton = ZegoSwitchAudioOutputButton()
                 audioOutputButtonComponent.useSpeaker = self.config.useSpeakerWhenJoining
                 if self.config.bottomMenuBarConfig.maxCount < self.barButtons.count && index >= self.config.bottomMenuBarConfig.maxCount {

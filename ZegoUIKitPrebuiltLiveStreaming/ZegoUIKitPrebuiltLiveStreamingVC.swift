@@ -10,22 +10,22 @@ import ZegoUIKit
 
 extension ZegoUIKitPrebuiltLiveStreamingVC: LiveStreamingVCApi {
     
-    public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
+    @objc public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
         self.bottomBar.addButtonToMenuBar(button, role: role)
     }
     
-    public func setStartLiveButton(_ button: ZegoStartLiveButton) {
+    @objc public func setStartLiveButton(_ button: ZegoStartLiveButton) {
         self.startLiveButton?.removeFromSuperview()
         self.startLiveButton = button
         self.startLiveButton?.delegate = self.help
         self.view.addSubview(self.startLiveButton!)
     }
     
-    public func clearBottomMenuBarExtendButtons(_ role: ZegoLiveStreamingRole) {
+    @objc public func clearBottomMenuBarExtendButtons(_ role: ZegoLiveStreamingRole) {
         self.bottomBar.clearBottomBarExtendButtons(role)
     }
     
-    public func setBackgroundView(_ view: UIView) {
+    @objc public func setBackgroundView(_ view: UIView) {
         self.backgroundView.setCustomBackGroundView(view: view)
     }
 }
@@ -230,11 +230,11 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.userName = userName
         self.liveID = liveID
         self.config = config
-      
+        
         let zegoLanguage: ZegoUIKitLanguage = config.translationText.getLanguage()
         let zegoUIKitLanguage = ZegoUIKitLanguage(rawValue: zegoLanguage.rawValue)!
         ZegoUIKitTranslationTextConfig.shared.translationText = ZegoUIKitTranslationText(language: zegoUIKitLanguage);
-      
+        
         liveManager.addLiveManagerDelegate(self.help)
         liveManager.initWithAppID(appID: appID, appSign: appSign, enableSignalingPlugin: config.enableSignalingPlugin)
         ZegoUIKit.shared.addEventHandler(self.help)
@@ -250,7 +250,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -340,25 +340,25 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     
     @objc func keyboardWillChangeFrame(node : Notification){
-            print(node.userInfo ?? "")
-            // 1.获取动画执行的时间
-            let duration = node.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
-            // 2.获取键盘最终 Y值
-            let endFrame = (node.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
-            let y = endFrame.origin.y
-            
-            //3计算工具栏距离底部的间距
-            let margin = UIScreen.main.bounds.size.height - y
-            //4.执行动画
-            UIView.animate(withDuration: duration) {
-                self.view.layoutIfNeeded()
-                if margin > 0 {
-                    self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin - self.inputViewHeight, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
-                } else {
-                    self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
-                }
-                
+        print(node.userInfo ?? "")
+        // 1.获取动画执行的时间
+        let duration = node.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
+        // 2.获取键盘最终 Y值
+        let endFrame = (node.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
+        let y = endFrame.origin.y
+        
+        //3计算工具栏距离底部的间距
+        let margin = UIScreen.main.bounds.size.height - y
+        //4.执行动画
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+            if margin > 0 {
+                self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin - self.inputViewHeight, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
+            } else {
+                self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
             }
+            
+        }
     }
     
     private func setupLayout() {
@@ -404,11 +404,11 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.view.endEditing(true)
     }
     
-//    func updateHostProporty(_ isHost: Bool) {
-//        self.config.role = .audience
-//        //update UI
-//        self.setUIDisplayStatus()
-//    }
+    //    func updateHostProporty(_ isHost: Bool) {
+    //        self.config.role = .audience
+    //        //update UI
+    //        self.setUIDisplayStatus()
+    //    }
     
     @objc func startLiveClick() {
         //Check the permissions
@@ -564,18 +564,18 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.config.role = role
         liveManager.currentRole = role
         self.bottomBar.config = self.config
-//        guard let menuBarButtons = menuBarButtons else {
-//            return
-//        }
-//        var newMenuBarButtons: [ZegoMenuBarButtonName] = []
-//        for buttonName in menuBarButtons {
-//            let buttonType: ZegoMenuBarButtonName? = ZegoMenuBarButtonName(rawValue: buttonName)
-//            if let buttonType = buttonType {
-//                newMenuBarButtons.append(buttonType)
-//            }
-//        }
-//        self.config.bottomMenuBarConfig.buttons = newMenuBarButtons
-//        self.bottomBar.config = self.config
+        //        guard let menuBarButtons = menuBarButtons else {
+        //            return
+        //        }
+        //        var newMenuBarButtons: [ZegoMenuBarButtonName] = []
+        //        for buttonName in menuBarButtons {
+        //            let buttonType: ZegoMenuBarButtonName? = ZegoMenuBarButtonName(rawValue: buttonName)
+        //            if let buttonType = buttonType {
+        //                newMenuBarButtons.append(buttonType)
+        //            }
+        //        }
+        //        self.config.bottomMenuBarConfig.buttons = newMenuBarButtons
+        //        self.bottomBar.config = self.config
     }
     
     func addOrRemoveSeatListUser(_ user: ZegoUIKitUser, isAdd: Bool) {
@@ -678,9 +678,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 liveStreamingVC.coHostList.append(user)
             }
         }
-//        if liveStreamingVC.coHostList.count > 0 && liveStreamingVC.liveStatus == "1" {
-//            liveStreamingVC.backgroundImageView.isHidden = true
-//        }
+        //        if liveStreamingVC.coHostList.count > 0 && liveStreamingVC.liveStatus == "1" {
+        //            liveStreamingVC.backgroundImageView.isHidden = true
+        //        }
         liveStreamingVC.memberButton.coHostList = liveStreamingVC.coHostList
     }
     
@@ -701,9 +701,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             liveStreamingVC.addOrRemoveSeatListUser(user, isAdd: false)
             liveStreamingVC.addOrRemoveHostInviteList(user, isAdd: false)
         }
-//        if liveStreamingVC.coHostList.count == 0 && liveStreamingVC.liveStatus != "1" {
-//            liveStreamingVC.backgroundImageView.isHidden = false
-//        }
+        //        if liveStreamingVC.coHostList.count == 0 && liveStreamingVC.liveStatus != "1" {
+        //            liveStreamingVC.backgroundImageView.isHidden = false
+        //        }
         liveStreamingVC.memberButton.coHostList = liveStreamingVC.coHostList
     }
     
@@ -712,20 +712,20 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
               let _ = liveStreamingVC.userID
         else { return }
         if liveStreamingVC.config.role == .host {
-//            var thereIsHostInRoom: Bool = false
-//            for key in updateKeys {
-//                let value: String? = properties[key]
-//                if key == "host" && value != nil && value != "" && value != userID {
-//                    thereIsHostInRoom = true
-//                    break
-//                }
-//            }
-//            if thereIsHostInRoom {
-//                liveStreamingVC.updateHostProporty(false)
-//            } else {
-//                // start live
-//
-//            }
+            //            var thereIsHostInRoom: Bool = false
+            //            for key in updateKeys {
+            //                let value: String? = properties[key]
+            //                if key == "host" && value != nil && value != "" && value != userID {
+            //                    thereIsHostInRoom = true
+            //                    break
+            //                }
+            //            }
+            //            if thereIsHostInRoom {
+            //                liveStreamingVC.updateHostProporty(false)
+            //            } else {
+            //                // start live
+            //
+            //            }
         } else {
             guard let live_status = properties["live_status"] else { return }
             liveStreamingVC.liveStatus = live_status
@@ -884,7 +884,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         liveStreamingVC.present(alterView, animated: false, completion: nil)
         // 一分钟后隐藏视图
         DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
-          self.invitateAlter?.dismiss(animated: false)
+            self.invitateAlter?.dismiss(animated: false)
         }
     }
     
@@ -1024,12 +1024,12 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.requestCoHostFailed, onView: liveStreamingVC.view)
             } else if liveStreamingVC.liveStatus == "1" {
                 guard let host = liveStreamingVC.currentHost else { return }
-              if liveStreamingVC.pkBattleView?.isHidden == false {
-                //FIXME: pk中不可以申请连麦
-                ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.pkingNotRequestCoHost, onView: liveStreamingVC.view)
-                sender.buttonType = .requestCoHost
-                return
-              }
+                if liveStreamingVC.pkBattleView?.isHidden == false {
+                    //FIXME: You are not allowed to apply for a link in pk
+                    ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.pkingNotRequestCoHost, onView: liveStreamingVC.view)
+                    sender.buttonType = .requestCoHost
+                    return
+                }
                 ZegoLiveStreamTipView.showTip(liveStreamingVC.config.translationText.sendRequestCoHostToast, onView: liveStreamingVC.view)
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: true)
                 if liveStreamingVC.config.enableSignalingPlugin {
@@ -1082,7 +1082,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         ZegoUIKit.shared.turnMicrophoneOn(userID, isOn: false)
         liveStreamingVC.updateConfigMenuBar(.audience)
     }
-
+    
     //MARK: - LeaveButtonDelegate ZegoLiveStreamBottomBarDelegate
     func onLeaveButtonClick(_ isLeave: Bool) {
         guard let liveStreamingVC = liveStreamingVC else { return }

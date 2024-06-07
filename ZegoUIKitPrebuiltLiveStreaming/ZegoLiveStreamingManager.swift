@@ -90,7 +90,7 @@ extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
     
 }
 
-
+@objcMembers
 public class ZegoLiveStreamingManager: NSObject {
     
     public static let shared = ZegoLiveStreamingManager()
