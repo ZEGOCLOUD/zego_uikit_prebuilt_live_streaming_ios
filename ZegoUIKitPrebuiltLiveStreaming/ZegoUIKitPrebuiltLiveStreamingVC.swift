@@ -10,8 +10,8 @@ import ZegoUIKit
 
 extension ZegoUIKitPrebuiltLiveStreamingVC: LiveStreamingVCApi {
     
-    @objc public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
-        self.bottomBar.addButtonToMenuBar(button, role: role)
+    @objc public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole, position:ZegoBottomMenuBarPosition = .left) {
+      self.bottomBar.addButtonToMenuBar(button, role: role, position: position)
     }
     
     @objc public func setStartLiveButton(_ button: ZegoStartLiveButton) {
@@ -28,6 +28,17 @@ extension ZegoUIKitPrebuiltLiveStreamingVC: LiveStreamingVCApi {
     @objc public func setBackgroundView(_ view: UIView) {
         self.backgroundView.setCustomBackGroundView(view: view)
     }
+  
+    @objc public func leaveRoom() {
+      self.help.onLeaveButtonClick(true)
+    }
+  
+    @objc public func sendBarrageMessage(roomID: String, message: String, callback: ((Int, String) -> Void)?) {
+      ZegoUIKit.shared.sendBarrageMessage(roomID: roomID, message: message) { errorCode, messageID in
+        callback?(Int(errorCode),message)
+      }
+    }
+  
 }
 
 
@@ -193,7 +204,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             }
         } else {
             let layoutConfig = ZegoLayoutPictureInPictureConfig()
-            layoutConfig.smallViewPostion = .bottomRight
+            layoutConfig.smallViewPosition = .bottomRight
             layoutConfig.smallViewSize = CGSize(width: 93, height: 124)
             layoutConfig.spacingBetweenSmallViews = 8
             layoutConfig.removeViewWhenAudioVideoUnavailable = true
@@ -230,7 +241,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.userName = userName
         self.liveID = liveID
         self.config = config
-        
+        ZegoUIKit.shared.setVideoConfig(config: config.videoConfig.resolution)
         let zegoLanguage: ZegoUIKitLanguage = config.translationText.getLanguage()
         let zegoUIKitLanguage = ZegoUIKitLanguage(rawValue: zegoLanguage.rawValue)!
         ZegoUIKitTranslationTextConfig.shared.translationText = ZegoUIKitTranslationText(language: zegoUIKitLanguage);
@@ -846,6 +857,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         liveStreamingVC.updateConfigMenuBar(.audience)
     }
     
+    func onIMRecvBarrageMessage(_ roomID: String, messageList: [ZegoUIKitBarrageMessageInfo]) {
+      self.liveStreamingVC?.delegate?.onIMRecvBarrageMessage?(roomID, messageList: messageList)
+    }
+  
     func showTipView(_ tipStr: String) {
         ZegoLiveStreamTipView.showTip(tipStr,onView: liveStreamingVC?.view)
     }

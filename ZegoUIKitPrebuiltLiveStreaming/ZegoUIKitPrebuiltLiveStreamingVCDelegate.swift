@@ -19,4 +19,5 @@ import ZegoUIKit
     @objc optional func getPKBattleBottomView(_ parentView: UIView, userList: [ZegoUIKitUser]) -> UIView?
     
     @objc optional func onInRoomMessageClick(_ message: ZegoInRoomMessage)
+    @objc optional func onIMRecvBarrageMessage(_ roomID: String, messageList: [ZegoUIKitBarrageMessageInfo])
 }

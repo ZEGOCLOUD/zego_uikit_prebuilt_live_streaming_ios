@@ -13,7 +13,7 @@ public protocol LiveStreamingVCApi {
     /// - Parameters:
     ///   - button: Custom button
     ///   - role: User identity, specifies under what condition the button is displayed.
-    func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole)
+    func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole, position:ZegoBottomMenuBarPosition)
     
     /// Custom start live button
     /// - Parameter button: Custom ZegoStartLiveButton
@@ -26,4 +26,8 @@ public protocol LiveStreamingVCApi {
     /// Custom Live Room Background
     /// - Parameter view: Custom view
     func setBackgroundView(_ view: UIView)
+  
+    func leaveRoom()
+  
+    func sendBarrageMessage(roomID: String , message: String, callback: ((_ errorCode: Int,_ errorMsg: String) -> Void)?)
 }

@@ -26,16 +26,17 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var enableCoHosting: Bool = false
     public var enableSignalingPlugin: Bool = false
     public var layout: ZegoLayout?
-    
+    public var videoConfig :ZegoPrebuiltVideoConfig = ZegoPrebuiltVideoConfig(resolution: .PRESET_360P)
+
     public lazy var confirmDialogInfo: ZegoLeaveConfirmDialogInfo? = {
-        let leaveDiaglog = ZegoLeaveConfirmDialogInfo()
+        let leaveDialog = ZegoLeaveConfirmDialogInfo()
         
-        leaveDiaglog.title = self.translationText.leaveDialogTitle
-        leaveDiaglog.message = self.translationText.leaveDialogMessage
-        leaveDiaglog.cancelButtonName = self.translationText.cancelMenuDialogButton
-        leaveDiaglog.confirmButtonName = self.translationText.leaveDialogConfimText
+        leaveDialog.title = self.translationText.leaveDialogTitle
+        leaveDialog.message = self.translationText.leaveDialogMessage
+        leaveDialog.cancelButtonName = self.translationText.cancelMenuDialogButton
+        leaveDialog.confirmButtonName = self.translationText.leaveDialogConfirmText
         if self.role == .host {
-            return leaveDiaglog
+            return leaveDialog
         } else {
             return nil
         }
@@ -61,6 +62,15 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
         config.role = .audience
         config.enableSignalingPlugin = enableSignalingPlugin
         return config
+    }
+}
+
+@objcMembers
+public class ZegoPrebuiltVideoConfig: NSObject {
+    public var resolution:ZegoPresetResolution = ZegoPresetResolution.PRESET_360P
+    public init(resolution: ZegoPresetResolution = .PRESET_360P) {
+      super.init()
+      self.resolution = resolution
     }
 }
 
@@ -141,7 +151,7 @@ public class ZegoTranslationText: NSObject {
     
     public var leaveDialogTitle: String = "Stop the Live"
     public var leaveDialogMessage: String = "Are you sure to stop the live?"
-    public var leaveDialogConfimText: String = "Stop it"
+    public var leaveDialogConfirmText: String = "Stop it"
     
     public var dialogOkText: String = "OK"
     public var userIdentityYouHost: String = "(You,Host)"
@@ -189,7 +199,7 @@ public class ZegoTranslationText: NSObject {
             
             leaveDialogTitle = "停止直播"
             leaveDialogMessage = "您确定要停止直播吗？"
-            leaveDialogConfimText = "停止直播"
+            leaveDialogConfirmText = "停止直播"
             
             dialogOkText = "确定"
             userIdentityYouHost = "(我,房主)"

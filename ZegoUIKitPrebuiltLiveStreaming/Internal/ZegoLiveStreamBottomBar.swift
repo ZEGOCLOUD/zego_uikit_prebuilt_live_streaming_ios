@@ -25,6 +25,7 @@ extension ZegoLiveStreamBottomBarDelegate {
 class ZegoLiveStreamBottomBar: UIView {
 
     var userID: String?
+    var position: ZegoBottomMenuBarPosition = .left
     var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience() {
         didSet {
             self.messageButton.isHidden = !config.bottomMenuBarConfig.showInRoomMessageButton
@@ -139,13 +140,26 @@ class ZegoLiveStreamBottomBar: UIView {
     }
     
     /// - Parameter button: <#button description#>
-    public func addButtonToMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole) {
+    public func addButtonToMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole, position:ZegoBottomMenuBarPosition = .left) {
         if role == .host {
+          if position == .left {
             self.hostExtendButtons.append(button)
+          } else {
+            self.hostExtendButtons.insert(button, at: 0)
+          }
         } else if role == .coHost {
+          if position == .left {
             self.coHostExtendButtons.append(button)
+          } else {
+            self.coHostExtendButtons.insert(button, at: 0)
+            self.position = position
+          }
         } else if role == .audience {
+          if position == .left {
             self.audienceExtendButtons.append(button)
+          } else {
+            self.audienceExtendButtons.insert(button, at: 0)
+          }
         }
         if role == self.config.role {
             if self.buttons.count > self.config.bottomMenuBarConfig.maxCount - 1 {
@@ -161,10 +175,15 @@ class ZegoLiveStreamBottomBar: UIView {
                 lastButton.removeFromSuperview()
                 self.moreButtonList.append(lastButton)
                 self.moreButtonList.append(button)
+                self.buttons.removeLast()
                 self.buttons.insert(moreButton, at: 0)
     //            self.buttons.replaceSubrange(4...4, with: [moreButton])
             } else {
-                self.buttons.append(button)
+                if position == .left {
+                  self.buttons.append(button)
+                } else {
+                  self.buttons.insert(button, at: 0)
+                }
                 self.addSubview(button)
             }
             self.setupLayout()
@@ -252,7 +271,8 @@ class ZegoLiveStreamBottomBar: UIView {
                         case .endCoHost:
                             button.frame = CGRect.init(x: lastView.frame.minX - itemSpace - 84, y: lastView.frame.minY, width: 84, height: itemSize.height)
                         }
-                        
+                        coHostButton.layer.masksToBounds = true
+                        coHostButton.layer.cornerRadius = 18
                     } else {
                         let width = button.bounds.size.width > 0 ? button.bounds.size.width : itemSize.width
                         button.frame = CGRect.init(x: lastView.frame.minX - itemSpace - width, y: lastView.frame.minY, width: width, height: itemSize.height)
@@ -376,7 +396,11 @@ class ZegoLiveStreamBottomBar: UIView {
             if self.config.bottomMenuBarConfig.maxCount < (self.barButtons.count + extendButtons.count) && index >= (Int(self.config.bottomMenuBarConfig.maxCount) - self.barButtons.count) {
                 self.moreButtonList.append(button)
             } else {
-                self.buttons.append(button)
+              if self.position == .right && self.config.role == .coHost {
+                  self.buttons.insert(button, at: 0)
+                } else {
+                  self.buttons.append(button)
+                }
                 self.addSubview(button)
             }
         }

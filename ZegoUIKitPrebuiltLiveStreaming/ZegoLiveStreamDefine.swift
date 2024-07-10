@@ -69,6 +69,11 @@ enum ZegoUIKitLiveStreamIconSetType: String, Hashable {
     case pk = 5
 }
 
+@objc public enum ZegoBottomMenuBarPosition: Int {
+    case left
+    case right
+}
+
 @objc public enum ZegoLiveStreamingRole: Int {
     case host = 0
     case coHost = 1
