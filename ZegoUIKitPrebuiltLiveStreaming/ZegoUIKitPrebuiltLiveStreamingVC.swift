@@ -433,9 +433,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     @objc func backButtonClick() {
         ZegoUIKit.shared.updateRoomProperties(["live_status": "0", "host": ""]) { data in
             if data?["code"] as! Int == 0 {
-                self.dismiss(animated: true)
-                self.delegate?.onLeaveLiveStreaming?()
+                
             }
+          self.dismiss(animated: true)
+          self.delegate?.onLeaveLiveStreaming?()
         }
     }
     
