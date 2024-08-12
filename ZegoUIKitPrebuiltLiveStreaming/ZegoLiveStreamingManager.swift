@@ -44,7 +44,7 @@ extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
     public func acceptIncomingPKBattleRequest(_ requestID: String, anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser, customData: String) {
         pkService?.acceptPKStartRequest(requestID: requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser, customData: customData)
     }
-
+    
     public func acceptIncomingPKBattleRequest(_ requestID: String, anotherHostLiveID: String, anotherHostUser: ZegoUIKitUser) {
         pkService?.acceptPKStartRequest(requestID: requestID, anotherHostLiveID: anotherHostLiveID, anotherHostUser: anotherHostUser, customData: nil)
     }
@@ -52,7 +52,7 @@ extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
     public func rejectPKBattleStartRequest(_ requestID: String) {
         pkService?.rejectPKStartRequest(requestID: requestID, rejectCode: ZegoLiveStreamingPKBattleRejectCode.host_reject.rawValue)
     }
-
+    
     
     public func muteAnotherHostAudio(_ mute: Bool, callback: ZegoUIKitCallBack?) {
         pkService?.muteAnotherHostAudio(mute: mute, callback: callback)
@@ -65,7 +65,7 @@ extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
                                     callback: UserRequestCallback?) {
         pkService?.sendPKBattlesStartRequest(anotherHostUserID: anotherHostUserID, timeout: timeout, customData: customData, callback: callback)
     }
-
+    
     public func sendPKBattleRequest(anotherHostUserID: String, timeout: UInt32 = 60,callback: UserRequestCallback?) {
         pkService?.sendPKBattlesStartRequest(anotherHostUserID: anotherHostUserID, timeout: timeout, customData: nil, callback: callback)
     }
@@ -82,7 +82,7 @@ extension ZegoLiveStreamingManager: LiveStreamingManagerApi {
         ZegoUIKit.shared.leaveRoom()
         if enableSignalingPlugin {
             ZegoUIKit.getSignalingPlugin().leaveRoom { data in
-//                ZegoUIKit.getSignalingPlugin().loginOut()
+                //                ZegoUIKit.getSignalingPlugin().loginOut()
                 ZegoUIKit.shared.removeEventHandler(self)
             }
         }
@@ -167,18 +167,26 @@ public class ZegoLiveStreamingManager: NSObject {
         }
     }
     
-    func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool) {
+    func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool,completion: @escaping(_ errorCode:Int) -> Void) {
         ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: roomID, markAsLargeRoom: markAsLargeRoom)
         if enableSignalingPlugin {
-            getSignalingPlugin()?.joinRoom(roomID: roomID, callback: nil)
+            getSignalingPlugin()?.joinRoom(roomID: roomID, callback: { data in
+                if let code = data?["code"] as? Int {
+                    completion(code)
+                } else {
+                    completion(-1) // 或者您可以选择其他的默认值来表示 data 为空的情况
+                }
+            })
+        } else {
+            completion(100)
         }
     }
-
+    
     func stopPKBattleInner() {
         pkService?.stopPK();
     }
     
-
+    
     func startPKBattleWith(anotherHostLiveID: String, anotherHostUserID: String, anotherHostName: String) {
         pkService?.startPKBattleWith(anotherHostLiveID: anotherHostLiveID, anotherHostUserID: anotherHostUserID, anotherHostName: anotherHostName)
     }
@@ -186,30 +194,30 @@ public class ZegoLiveStreamingManager: NSObject {
     public func isPKUser(userID: String) -> Bool {
         return false
     }
-
-//    public func removeRoomData() {
-//        //pkService.removeRoomData()
-//    }
-//
-//    public func removeUserData() {
-//        pkService.removeUserData();
-//        userStatusMap.clear();
-//    }
-
+    
+    //    public func removeRoomData() {
+    //        //pkService.removeRoomData()
+    //    }
+    //
+    //    public func removeUserData() {
+    //        pkService.removeUserData();
+    //        userStatusMap.clear();
+    //    }
+    
     func generateCameraStreamID(roomID: String, userID: String) -> String {
         return roomID + "_" + userID + "_main"
     }
-
+    
     func startPublishingStream() {
         let currentRoomID = ZegoUIKit.shared.room?.roomID ?? ""
         let streamID = generateCameraStreamID(roomID: currentRoomID, userID: ZegoUIKit.shared.localUserInfo?.userID ?? "")
         ZegoUIKit.shared.startPublishingStream(streamID)
     }
-
+    
     func stopPublishStream() {
         ZegoUIKit.shared.stopPublishingStream()
     }
-
+    
 }
 
 extension ZegoLiveStreamingManager: ZegoUIKitEventHandle, PKServiceDelegate {

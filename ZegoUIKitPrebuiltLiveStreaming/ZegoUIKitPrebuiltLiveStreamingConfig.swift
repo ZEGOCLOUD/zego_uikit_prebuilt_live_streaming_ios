@@ -27,7 +27,8 @@ public class ZegoUIKitPrebuiltLiveStreamingConfig: NSObject {
     public var enableSignalingPlugin: Bool = false
     public var layout: ZegoLayout?
     public var videoConfig :ZegoPrebuiltVideoConfig = ZegoPrebuiltVideoConfig(resolution: .PRESET_360P)
-
+    //The total length of the user attribute Key-Value owned by each user in the room does not exceed 144 bytes
+    public var userAvatarUrl: String?
     public lazy var confirmDialogInfo: ZegoLeaveConfirmDialogInfo? = {
         let leaveDialog = ZegoLeaveConfirmDialogInfo()
         
