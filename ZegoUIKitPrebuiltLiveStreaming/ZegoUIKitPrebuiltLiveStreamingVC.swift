@@ -181,7 +181,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         let iconView = ZegoLiveHostHeaderView()
         return iconView
     }()
-    
+
     func createAudioVideoViewContainer() {
         if let _ = audioVideoContainer {
             return
@@ -214,7 +214,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.view.insertSubview(container.view, at: 0)
     }
     
-    func destoryAudioVideoView() {
+    func destroyAudioVideoView() {
         audioVideoContainer?.view.removeFromSuperview()
         audioVideoContainer = nil
     }
@@ -229,7 +229,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.view.insertSubview(view, at: 0)
     }
     
-    func destoryPKView() {
+    func destroyPKView() {
         pkBattleView?.removeFromSuperview()
         pkBattleView = nil
     }
@@ -273,6 +273,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
             }
         }
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillChangeFrame(node:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+
     }
     
     func setupUI() {
@@ -288,7 +289,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.view.addSubview(self.bottomBar)
         self.view.addSubview(self.inputTextView)
         self.view.addSubview(self.backButton)
-        self.createNomalStartLiveButton()
+        self.createNormalStartLiveButton()
         if let startLiveButton = startLiveButton {
             self.view.bringSubviewToFront(startLiveButton)
         }
@@ -300,7 +301,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.setUIDisplayStatus()
     }
     
-    func createNomalStartLiveButton() {
+    func createNormalStartLiveButton() {
         let button: ZegoStartLiveButton = ZegoStartLiveButton()
         button.delegate = self.help
         button.backgroundColor = UIColor.colorWithHexString("#A754FF")
@@ -350,7 +351,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     }
     
     
-    @objc func keyboardWillChangeFrame(node : Notification){
+    @objc func keyboardWillChangeFrame(node : Notification) {
         print(node.userInfo ?? "")
         // 1.获取动画执行的时间
         let duration = node.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
@@ -361,7 +362,9 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         //3计算工具栏距离底部的间距
         let margin = UIScreen.main.bounds.size.height - y
         //4.执行动画
-        UIView.animate(withDuration: duration) {
+        UIView.animate(withDuration: duration) { [weak self] in
+          guard let self = self else { return }
+
             self.view.layoutIfNeeded()
             if margin > 0 {
                 self.inputTextView.frame = CGRect(x: 0, y: UIScreen.main.bounds.size.height - margin - self.inputViewHeight, width: UIScreen.main.bounds.size.width, height: self.inputViewHeight)
@@ -402,16 +405,9 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
               let userID = self.userID,
               let userName = self.userName
         else { return }
-        liveManager.joinRoom(userID: userID, userName: userName, roomID: liveID, markAsLargeRoom: self.config.markAsLargeRoom) { errorCode in
+        liveManager.joinRoom(userID: userID, userName: userName, roomID: liveID, markAsLargeRoom: self.config.markAsLargeRoom) {[self] errorCode in
             if errorCode == 0 {
-                ZegoUIKit.getSignalingPlugin().setUsersInRoomAttributes("avatar", value: self.config.userAvatarUrl ?? "", userIDs: [self.userID!], roomID: self.liveID!) {[self] data in
-                    guard let data = data else { return }
-                    let code = data["code"] as! Int
-                    if code == 0  {
-                        print("setUsersInRoomAttributes error: ",code)
-                        self.queryInRoomUserAttribute()
-                    }
-                }
+              self.setUsersInRoomAttributesZIM()
             }
         }
         if self.config.turnOnCameraWhenJoining || self.config.turnOnMicrophoneWhenJoining {
@@ -422,16 +418,20 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         
     }
     
+    func setUsersInRoomAttributesZIM() {
+      ZegoUIKit.getSignalingPlugin().setUsersInRoomAttributes("avatar", value: self.config.userAvatarUrl ?? "", userIDs: [self.userID!], roomID: self.liveID!) {[self] data in
+          guard let data = data else { return }
+          let code = data["code"] as! Int
+          if code == 0  {
+              print("setUsersInRoomAttributes error: ",code)
+              self.queryInRoomUserAttribute()
+          }
+      }
+    }
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         self.view.endEditing(true)
     }
-    
-    //    func updateHostProporty(_ isHost: Bool) {
-    //        self.config.role = .audience
-    //        //update UI
-    //        self.setUIDisplayStatus()
-    //    }
     
     @objc func startLiveClick() {
         //Check the permissions
@@ -443,6 +443,7 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     }
     
     @objc func backButtonClick() {
+
         ZegoUIKit.shared.updateRoomProperties(["live_status": "0", "host": ""]) { data in
             if data?["code"] as! Int == 0 {
 
@@ -466,11 +467,13 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         if !ZegoLiveStreamAuthorizedCheck.isCameraAuthorizationDetermined() {
             requestCameraEnd = false
             //not determined
-            ZegoLiveStreamAuthorizedCheck.requestCameraAccess {
+            ZegoLiveStreamAuthorizedCheck.requestCameraAccess { [weak self] in
+                guard let self = self else { return }
                 //agree
                 requestCameraEnd = true
                 self.showCameraOrMicAlter(requestCameraEnd, showMic: requestMicEnd, needDelay: false)
-            } cancelCompletion: {
+            } cancelCompletion: { [weak self] in
+                guard let self = self else { return }
                 //disagree
                 requestCameraEnd = true
                 self.showCameraOrMicAlter(requestCameraEnd, showMic: requestMicEnd, needDelay: false)
@@ -483,11 +486,13 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         if !ZegoLiveStreamAuthorizedCheck.isMicrophoneAuthorizationDetermined() {
             requestMicEnd = false
             //not determined
-            ZegoLiveStreamAuthorizedCheck.requestMicphoneAccess {
+            ZegoLiveStreamAuthorizedCheck.requestMicrophoneAccess { [weak self] in
+                guard let self = self else { return }
                 //agree
                 requestMicEnd = true
                 self.showCameraOrMicAlter(requestCameraEnd, showMic: requestMicEnd, needDelay: false)
-            } cancelCompletion: {
+            } cancelCompletion: { [weak self] in
+                guard let self = self else { return }
                 //disagree
                 requestMicEnd = true
                 self.showCameraOrMicAlter(requestCameraEnd, showMic: requestMicEnd, needDelay: false)
@@ -653,16 +658,18 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
   
     func queryInRoomUserAttribute(){
-        ZegoUIKit.getSignalingPlugin().queryUsersInRoomAttributes(ZegoUsersInRoomAttributesQueryConfig()) { data in
+      ZegoUIKit.getSignalingPlugin().queryUsersInRoomAttributes(ZegoUsersInRoomAttributesQueryConfig()) {[unowned self] data in
             guard let data = data else { return }
             print("queryInRoomUserAttribute data:%@",data)
             if data["code"] as! Int == 0 {
-                self.usersInRoomAttributes = data["infos"] as? [ZegoUserInRoomAttributesInfo]
+              self.usersInRoomAttributes = data["infos"] as? [ZegoUserInRoomAttributesInfo]
             }
         }
     }
+
     deinit {
         liveManager.leaveRoom()
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
         print("ZegoUIKitPrebuiltLiveStreamingVC deinit")
     }
     
@@ -1228,7 +1235,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         liveStreamingVC.createPKView()
         if liveStreamingVC.liveManager.currentRole == .host {
             liveStreamingVC.setStartLiveStatus()
-            liveStreamingVC.destoryAudioVideoView()
+            liveStreamingVC.destroyAudioVideoView()
             liveStreamingVC.pkBattleView?.isHidden = false
         } else {
             liveStreamingVC.pkBattleView?.isHidden = true
@@ -1251,13 +1258,13 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     func onPKEnded() {
         liveStreamingVC?.pkBattleView?.pkInfo = nil
-        liveStreamingVC?.destoryPKView()
+        liveStreamingVC?.destroyPKView()
         liveStreamingVC?.createAudioVideoViewContainer()
     }
     
     func onPKViewAvaliable() {
         if liveStreamingVC?.liveManager.currentRole != .host {
-            liveStreamingVC?.destoryAudioVideoView()
+            liveStreamingVC?.destroyAudioVideoView()
             liveStreamingVC?.pkBattleView?.isHidden = false
         }
     }
@@ -1284,4 +1291,5 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         liveStreamingVC?.delegate?.onInRoomMessageClick?(message)
     }
 }
+
 

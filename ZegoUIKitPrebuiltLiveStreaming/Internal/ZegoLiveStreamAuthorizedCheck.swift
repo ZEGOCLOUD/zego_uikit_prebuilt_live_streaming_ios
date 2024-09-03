@@ -16,7 +16,7 @@ case micAlter
 
 class ZegoLiveStreamAuthorizedCheck: NSObject {
     
-    static func requestMicphoneAccess(okCompletion: @escaping () -> Void, cancelCompletion: @escaping () -> Void) {
+    static func requestMicrophoneAccess(okCompletion: @escaping () -> Void, cancelCompletion: @escaping () -> Void) {
         AVCaptureDevice.requestAccess(for: .audio, completionHandler: { (statusFirst) in
             if statusFirst {
                 DispatchQueue.main.async {
