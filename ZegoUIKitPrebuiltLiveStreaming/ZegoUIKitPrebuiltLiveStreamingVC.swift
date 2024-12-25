@@ -8,6 +8,35 @@
 import UIKit
 import ZegoUIKit
 
+let liveStreamInitReportString = "livestreaming/init"
+let liveStreamUnInitReportString = "livestreaming/unInit"
+
+//Host
+let liveStreamHostInviteReportString = "livestreaming/cohost/host/invite"
+let liveStreamHostReceiveApplyReportString = "livestreaming/cohost/host/received"
+let liveStreamHostResponseReportString = "livestreaming/cohost/host/respond"
+let liveStreamHostStopCo_HostReportString = "livestreaming/cohost/host/stop"
+
+//Co-Host
+let liveStreamCo_HostStopReportString = "livestreaming/cohost/cohost/received"
+//Audience
+let liveStreamAudienceInviteReportString = "livestreaming/audience/invite"
+let liveStreamAudienceInviteTimeOutReportString = "livestreaming/audience/invite/timeout"
+let liveStreamAudienceCancelInviteReportString = "livestreaming/cohost/audience/cancelInvite"
+let liveStreamAudienceReceiveReportString = "livestreaming/cohost/audience/received"
+let liveStreamAudienceResponseReportString = "livestreaming/cohost/audience/respond"
+let liveStreamAudienceStartReportString = "livestreaming/cohost/audience/start"
+let liveStreamAudienceStopReportString = "livestreaming/cohost/audience/stop"
+// PK
+let liveStreamPKStartReportString = "livestreaming/pk/invite"
+let liveStreamPKAddReportString = "livestreaming/pk/add"
+let liveStreamPKEndReportString = "livestreaming/pk/end"
+let liveStreamPKQuitReportString = "livestreaming/pk/quit"
+let liveStreamPKReceivedReportString = "livestreaming/pk/received"
+let liveStreamPKResponseReportString = "livestreaming/pk/respond"
+let liveStreamPKStartPlayStreamReportString = "livestreaming/pk/stream/startplay"
+let liveStreamPKStartPlayStreamFinishReportString = "livestreaming/pk/stream/startplay_finished"
+
 extension ZegoUIKitPrebuiltLiveStreamingVC: LiveStreamingVCApi {
     
     @objc public func addButtonToBottomMenuBar(_ button: UIButton, role: ZegoLiveStreamingRole, position:ZegoBottomMenuBarPosition = .left) {
@@ -236,7 +265,20 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
     
     @objc public init(_ appID: UInt32, appSign: String, userID: String, userName: String, liveID: String, config: ZegoUIKitPrebuiltLiveStreamingConfig) {
         super.init(nibName: nil, bundle: nil)
-        debugPrint("your userID:\(userID)")
+        
+        let streamSDKBundle = Bundle(identifier: "org.cocoapods.ZegoUIKitPrebuiltLiveStreaming")
+        let streamVersion = streamSDKBundle?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        
+        let UIKitSDKBundle = Bundle(identifier: "com.zegocloud.uikit")
+        let UIKitVersion = UIKitSDKBundle?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        
+        let reportData = ["user_id": userID as AnyObject,
+                     "platform": "iOS" as AnyObject,
+                     "platform_version": UIDevice.current.systemVersion as AnyObject,
+                     "uikit_version": UIKitVersion as AnyObject,
+                     "livestreaming_version" :streamVersion as AnyObject]
+        ReportUtil.sharedInstance().create(withAppID: appID, signOrToken: appSign, commonParams: reportData)
+        
         self.userID = userID
         self.userName = userName
         self.liveID = liveID
@@ -256,6 +298,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
         self.backgroundView.config = config
         self.backgroundView.liveStatus = liveStatus
         self.help.liveStreamingVC = self
+        
+        let initData = ["error": -1 as AnyObject,
+                        "msg": "" as AnyObject]
+        ReportUtil.sharedInstance().reportEvent(liveStreamInitReportString, paramsDict: initData)
     }
     
     required init?(coder: NSCoder) {
@@ -676,8 +722,10 @@ public class ZegoUIKitPrebuiltLiveStreamingVC: UIViewController {
 }
 
 class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDelegate, ZegoUIKitEventHandle, ZegoLiveStreamBottomBarDelegate, LeaveButtonDelegate, ZegoMemberButtonDelegate, ZegoStartLiveButtonDelegate, ZegoLiveStreamingManagerDelegate, PKContainerDelegate, ZegoInRoomMessageViewDelegate {
-    
-    
+    func onUserIDUpdated(userID: String) -> String? {
+        return ""
+    }
+
     weak var liveStreamingVC: ZegoUIKitPrebuiltLiveStreamingVC?
     var shouldSortHostAtFirst: Bool = true
     weak var invitateAlter: UIAlertController?
@@ -888,10 +936,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         }
     }
     
-    func onIncomingInviteToCohostRequest(inviter: ZegoUIKitUser, invitationID: String) {
+    func onIncomingInviteToCohostRequest(inviter: ZegoUIKitUser, invitationID: String, data: String?) {
         guard let userID = inviter.userID else { return }
         liveStreamingVC?.addOrRemoveAudienceReceiveInviteList(inviter, isAdd: true)
-        self.showInvitationAlert(userID, invitationID: invitationID)
+        self.showInvitationAlert(userID, invitationID: invitationID,data: data)
     }
     
     
@@ -913,10 +961,16 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         ZegoLiveStreamTipView.showTip(tipStr,onView: liveStreamingVC?.view)
     }
     
-    func showInvitationAlert(_ inviterID: String, invitationID: String?) {
+    func showInvitationAlert(_ inviterID: String, invitationID: String?, data: String?) {
         guard let liveStreamingVC = liveStreamingVC else {
             return
         }
+        
+        let reportData = ["call_id": invitationID as AnyObject,
+                          "host_id": inviterID as AnyObject,
+                          "extended_data": data as AnyObject]
+        ReportUtil.sharedInstance().reportEvent(liveStreamAudienceReceiveReportString, paramsDict: reportData)
+        
         let title: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoTitle
         let message: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoMessage
         let cancelStr: String = liveStreamingVC.config.translationText.receivedCoHostInvitationDialogInfoCancel
@@ -927,7 +981,12 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         let cancelButton: UIAlertAction = UIAlertAction.init(title: cancelStr, style: .cancel) { action in
             let dataDict: [String : AnyObject] = ["invitationID": invitationID as AnyObject]
             if liveStreamingVC.config.enableSignalingPlugin {
-                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation(inviterID, data: dataDict.live_jsonString)
+                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation(inviterID, data: dataDict.live_jsonString,callback: { data in
+                    
+                })
+                let reportData = ["call_id": invitationID as AnyObject,
+                                  "action": "refuse" as AnyObject]
+                ReportUtil.sharedInstance().reportEvent(liveStreamAudienceResponseReportString, paramsDict: reportData)
             }
             liveStreamingVC.addOrRemoveAudienceReceiveInviteList(ZegoUIKitUser.init(inviterID, ""), isAdd: false)
         }
@@ -940,6 +999,9 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             ZegoUIKit.shared.turnMicrophoneOn(liveStreamingVC.userID ?? "", isOn: true)
             if liveStreamingVC.config.enableSignalingPlugin {
                 ZegoLiveStreamingManager.shared.getSignalingPlugin()?.acceptInvitation(inviterID, data: nil, callback: nil)
+                let reportData = ["call_id": invitationID as AnyObject,
+                                  "action": "accept" as AnyObject]
+                ReportUtil.sharedInstance().reportEvent(liveStreamAudienceResponseReportString, paramsDict: reportData)
             }
         }
         alterView.addAction(cancelButton)
@@ -969,6 +1031,12 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             return
         }
         liveStreamingVC.addOrRemoveSeatListUser(inviter, isAdd: false)
+        
+        let reportData = ["call_id": "" as AnyObject,
+                          "audience_id": inviter.userID as AnyObject,
+                          "action": "inviterCancel" as AnyObject,
+                          "extended_data": data as AnyObject]
+        ReportUtil.sharedInstance().reportEvent(liveStreamHostReceiveApplyReportString, paramsDict: reportData)
     }
     
     func onIncomingCancelCohostInvite(inviter: ZegoUIKitUser, data: String?) {
@@ -1096,13 +1164,19 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
                 ZegoLiveStreamTipView.showTip(liveStreamingVC.config.translationText.sendRequestCoHostToast, onView: liveStreamingVC.view)
                 liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: true)
                 if liveStreamingVC.config.enableSignalingPlugin {
-                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([host.userID ?? ""], timeout: 60, type: ZegoInvitationType.requestCoHost.rawValue, data: nil, notificationConfig: nil) {[weak self] data in
+                        guard let self = self else { return }
                         guard let data = data else { return }
                         if data["code"] as! Int != 0 {
                             ZegoLiveStreamTipView.showWarn(liveStreamingVC.config.translationText.requestCoHostFailed, onView: liveStreamingVC.view)
                         } else {
                             sender.buttonType = .cancelCoHost
                         }
+                        
+                        let callID: String = data["callID"] as? String ?? ""
+                        let reportData = ["call_id": callID as AnyObject,
+                                          "room_id": self.liveStreamingVC?.liveID as AnyObject]
+                        ReportUtil.sharedInstance().reportEvent(liveStreamAudienceInviteReportString, paramsDict: reportData)
                     }
                 }
             }
@@ -1111,7 +1185,15 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             liveStreamingVC.addOrRemoveAudienceInviteList(host, isAdd: false)
             liveStreamingVC.bottomBar.isCoHost = false
             if liveStreamingVC.config.enableSignalingPlugin {
-                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation([host.userID ?? ""], data: nil, callback: nil)
+                ZegoLiveStreamingManager.shared.getSignalingPlugin()?.cancelInvitation([host.userID ?? ""], data: nil, callback: {[weak self] data in
+                    guard let self = self else { return }
+                    guard let data = data else { return }
+                    let callID: String = data["callID"] as? String ?? ""
+                    let reportData = ["call_id": callID as AnyObject,
+                                      "room_id": self.liveStreamingVC?.liveID as AnyObject]
+                    ReportUtil.sharedInstance().reportEvent(liveStreamAudienceCancelInviteReportString, paramsDict: reportData)
+                })
+                
             }
         case .endCoHost:
             self.showEndConnectionAlter(sender)
@@ -1128,6 +1210,8 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
         let sureButton: UIAlertAction = UIAlertAction.init(title: liveStreamingVC.config.translationText.dialogOkText, style: .default) { action in
             sender.buttonType = .requestCoHost
             self.endCohostRequest()
+     
+            ReportUtil.sharedInstance().reportEvent(liveStreamAudienceStopReportString, paramsDict: [:])
         }
         alterView.addAction(cancelButton)
         alterView.addAction(sureButton)
@@ -1176,6 +1260,7 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
             }
             self.liveStreamingVC?.dismiss(animated: true)
             self.liveStreamingVC?.delegate?.onLeaveLiveStreaming?()
+            ReportUtil.sharedInstance().reportEvent(liveStreamUnInitReportString, paramsDict: [:])
         }
         
     }
@@ -1209,6 +1294,10 @@ class ZegoUIKitPrebuiltLiveStreamingVC_Help: NSObject, ZegoAudioVideoContainerDe
     
     //MARK: - ZegoLiveStreamingManagerDelegate
     func onIncomingPKRequestReceived(requestID: String, anotherHostUser: ZegoUIKitUser, anotherHostLiveID: String, customData: String?) {
+        
+        let reportData = ["call_id": requestID as AnyObject,"extended_data": customData as AnyObject]
+        ReportUtil.sharedInstance().reportEvent(liveStreamPKReceivedReportString, paramsDict: reportData)
+        
         let alterView = UIAlertController(title: "receive pk request", message: "", preferredStyle: .alert)
         self.pkAlterView = alterView
         let acceptButton: UIAlertAction = UIAlertAction(title: "accept", style: .default) { [weak self] action in

@@ -11,7 +11,7 @@ import UIKit
 //MARK: -Internal
 let UIkitLiveScreenHeight = UIScreen.main.bounds.size.height
 let UIkitLiveScreenWidth = UIScreen.main.bounds.size.width
-let UIkitLiveBottomSafeAreaHeight = UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
+let UIkitLiveBottomSafeAreaHeight = UIApplication.shared.windows.first { $0.isKeyWindow }?.safeAreaInsets.bottom ?? 0
 
 func UIkitLiveAdaptLandscapeWidth(_ x: CGFloat) -> CGFloat {
     return x * (UIkitLiveScreenWidth / 375.0)

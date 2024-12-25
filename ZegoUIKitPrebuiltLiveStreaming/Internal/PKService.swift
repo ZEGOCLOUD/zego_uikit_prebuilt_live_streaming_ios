@@ -54,6 +54,7 @@ class PKService: NSObject {
         }
     }
     var currentPKInfo: PKInfo?
+    var callID: String = ""
     var roomPKState: RoomPKState = .isNoPK
     
     private var currentMixerTask: ZegoMixerTask?
@@ -92,7 +93,8 @@ class PKService: NSObject {
                                    callback: UserRequestCallback?) {
         let pkExtendedData = getPKExtendedData(type: PKProtocolType.startPK.rawValue, customData: customData)
         roomPKState = .isRequestPK
-        sendUserRequest(userID: anotherHostUserID, timeout: timeout, extendedData: pkExtendedData) { data in
+        sendUserRequest(userID: anotherHostUserID, timeout: timeout, extendedData: pkExtendedData) {[weak self] data in
+            guard let self = self else { return }
             let code = data?["code"] as! Int
             let invitationID = data?["callID"] as? String ?? ""
             if code == 0 {
@@ -100,6 +102,9 @@ class PKService: NSObject {
             } else {
                 self.roomPKState = .isNoPK
             }
+            self.callID = invitationID;
+            let reportData = ["call_id": invitationID as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamPKStartReportString, paramsDict: reportData)
             guard let callback = callback else { return }
             callback(code,invitationID)
         }
@@ -125,7 +130,17 @@ class PKService: NSObject {
         pkExtendedData.roomID = ZegoUIKit.shared.room?.roomID ?? ""
         pkExtendedData.userName = ZegoUIKit.shared.localUserInfo?.userName ?? ""
         pkExtendedData.type = PKProtocolType.endPK.rawValue
-        sendUserRequest(userID: currentPKInfo?.pkUser.userID ?? "", timeout: 60, extendedData: pkExtendedData.toJsonString(), callback: nil)
+        sendUserRequest(userID: currentPKInfo?.pkUser.userID ?? "", timeout: 60, extendedData: pkExtendedData.toJsonString()) {[weak self] data in
+            guard let self = self else { return }
+            let code = data?["code"] as! Int
+            let reportData = ["call_id": data?["callID"] as AnyObject,"error" : code as AnyObject]
+            if (ZegoLiveStreamingManager.shared.getHostID() == ZegoUIKit.shared.localUserInfo?.userID) {
+                ReportUtil.sharedInstance().reportEvent(liveStreamPKEndReportString, paramsDict: reportData)
+            } else {
+                ReportUtil.sharedInstance().reportEvent(liveStreamPKQuitReportString, paramsDict: reportData)
+            }
+            self.callID = "";
+        }
         delectPKAttributes()
         for delegate in eventDelegates.allObjects {
             ZegoUIKit.shared.stopPlayStream(currentPKInfo?.getPKStreamID() ?? "")
@@ -138,8 +153,12 @@ class PKService: NSObject {
         roomPKState = .isNoPK
         let pkExtendedData = getPKExtendedData(type: PKProtocolType.startPK.rawValue, customData: customData)
         let requestID = sendPKStartRequest.requestID
-        cancelUserRequest(requestID: requestID, extendedData: pkExtendedData) { data in
+        cancelUserRequest(requestID: requestID, extendedData: pkExtendedData) {[weak self] data in
+            guard let self = self else { return }
             let code = data?["code"] as! Int
+            let reportData = ["call_id": data?["callID"] as AnyObject,"action": "cancel" as AnyObject,"error" : code as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamPKResponseReportString, paramsDict: reportData)
+            self.callID = "";
             guard let callback = callback else { return }
             callback(code,requestID)
         }
@@ -157,11 +176,15 @@ class PKService: NSObject {
         }
         let pkExtendedData = getPKExtendedData(type: PKProtocolType.startPK.rawValue, customData: customData)
         acceptUserRequest(requestID: requestID, inviterID: anotherHostUser.userID ?? "", extendedData: pkExtendedData) { data in
+            self.callID =  data?["invitationID"] as? String ?? ""
             if let data = data,
                let code = data["code"] as? Int {
                 if code == 0 {
+                    
                     self.startPKBattleWith(anotherHostLiveID: anotherHostLiveID, anotherHostUserID: anotherHostUser.userID ?? "", anotherHostName: anotherHostUser.userName ?? "")
                 }
+                let reportData = ["call_id": self.callID as AnyObject,"action": "accept" as AnyObject,"error" : data["code"] as AnyObject]
+                ReportUtil.sharedInstance().reportEvent(liveStreamPKResponseReportString, paramsDict: reportData)
             }
         }
     }
@@ -182,7 +205,8 @@ class PKService: NSObject {
         var jsonObject: [String: AnyObject] = pkExtendedData.live_convertStringToDictionary() ?? [:]
         jsonObject["reason"] = rejectCode as AnyObject
         rejectUserRequest(requestID: requestID, extendedData: jsonObject.live_jsonString) { data in
-            
+            let reportData = ["call_id": data?["invitationID"] as AnyObject,"action": "accept" as AnyObject,"error" : data?["code"] as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamPKResponseReportString, paramsDict: reportData)
         }
         if receivePkRequest?.requestID == requestID {
             receivePkRequest = nil
@@ -223,7 +247,7 @@ extension PKService: ZegoUIKitEventHandle {
     private func rejectUserRequest(requestID: String, extendedData: String, callback: PluginCallBack?) {
         var jsonObject: [String: AnyObject] = extendedData.live_convertStringToDictionary() ?? [:]
         jsonObject["invitationID"] = requestID as AnyObject
-        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation("", data: jsonObject.live_jsonString)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation("", data: jsonObject.live_jsonString,callback: callback)
     }
     
     private func cancelUserRequest(requestID: String, extendedData: String, callback: PluginCallBack?) {

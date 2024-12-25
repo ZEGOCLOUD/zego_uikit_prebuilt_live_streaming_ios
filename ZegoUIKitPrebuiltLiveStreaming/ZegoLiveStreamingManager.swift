@@ -99,6 +99,13 @@ public class ZegoLiveStreamingManager: NSObject {
             return pkService?.currentPKInfo
         }
     }
+    
+    public var callID: String? {
+        get {
+            return pkService?.callID
+        }
+    }
+    
     public var pkState: RoomPKState {
         get {
             return pkService?.roomPKState ?? .isNoPK
@@ -168,7 +175,8 @@ public class ZegoLiveStreamingManager: NSObject {
     }
     
     func joinRoom(userID: String, userName: String, roomID: String, markAsLargeRoom: Bool,completion: @escaping(_ errorCode:Int) -> Void) {
-        ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: roomID, markAsLargeRoom: markAsLargeRoom)
+        ZegoUIKit.shared.joinRoom(userID, userName: userName, roomID: roomID, markAsLargeRoom: markAsLargeRoom) { data in
+        }
         if enableSignalingPlugin {
             getSignalingPlugin()?.joinRoom(roomID: roomID, callback: { data in
                 if let code = data?["code"] as? Int {
@@ -228,14 +236,25 @@ extension ZegoLiveStreamingManager: ZegoUIKitEventHandle, PKServiceDelegate {
         let pluginInvitationID: String = dataDic?["invitationID"] as? String ?? ""
         
         if type == ZegoInvitationType.requestCoHost.rawValue {
+            let callID: String = dataDic?["invitationID"] as? String ?? ""
+            let reportData = ["call_id": callID as AnyObject,
+                              "audience_id": inviter.userID as AnyObject,
+                              "action": "apply " as AnyObject,
+                              "extended_data": data as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamHostReceiveApplyReportString, paramsDict: reportData)
             for delgate in eventDelegates.allObjects {
                 delgate.onIncomingCohostRequest?(inviter: inviter)
             }
         } else if type == ZegoInvitationType.inviteToCoHost.rawValue {
             for delgate in eventDelegates.allObjects {
-                delgate.onIncomingInviteToCohostRequest?(inviter: inviter, invitationID: pluginInvitationID)
+                delgate.onIncomingInviteToCohostRequest?(inviter: inviter, invitationID: pluginInvitationID,data: data)
             }
         } else if type == ZegoInvitationType.removeCoHost.rawValue {
+            let reportData = ["call_id": pluginInvitationID as AnyObject,
+                              "host_id": inviter.userID as AnyObject,
+                              "extended_data": data as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamCo_HostStopReportString, paramsDict: reportData)
+            
             for delgate in eventDelegates.allObjects {
                 delgate.onIncomingRemoveCohostRequest?(inviter: inviter)
             }
@@ -279,12 +298,15 @@ extension ZegoLiveStreamingManager: ZegoUIKitEventHandle, PKServiceDelegate {
         let pluginInvitationID: String = dataDic?["invitationID"] as? String ?? ""
         let isPKInvitation = pkService?.isPKInvitation(pluginInvitationID) ?? false
         if isPKInvitation {
+            //FIXME: PK取消
             pkService?.onPKInvitationCanceled(inviter, data: data)
         } else {
             for delegate in eventDelegates.allObjects {
                 if currentRole == .host {
+                    //FIXME: 房主收到观众取消申请
                     delegate.onIncomingCancelCohostRequest?(inviter: inviter, data: data)
                 } else {
+                    //FIXME: 观众收到房主取消邀请
                     delegate.onIncomingCancelCohostInvite?(inviter: inviter, data: data)
                 }
             }
@@ -298,6 +320,10 @@ extension ZegoLiveStreamingManager: ZegoUIKitEventHandle, PKServiceDelegate {
         if isPKInvitation {
             pkService?.onPKInvitationTimeout(inviter, data: data)
         } else {
+            let reportData = ["call_id": pluginInvitationID as AnyObject,
+                              "action": "timeout" as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(currentRole == .host ? liveStreamHostResponseReportString : liveStreamAudienceInviteTimeOutReportString, paramsDict: reportData)
+
             for delegate in eventDelegates.allObjects {
                 if currentRole == .host {
                     delegate.onIncomingCohostInviteTimeOut?(inviter: inviter, data: data)
@@ -315,10 +341,15 @@ extension ZegoLiveStreamingManager: ZegoUIKitEventHandle, PKServiceDelegate {
         if isPKInvitation {
             pkService?.onPKInvitationResponseTimeout(invitees, data: data)
         } else {
+            
+            let reportData = ["call_id": pluginInvitationID as AnyObject,
+                              "action": "timeout" as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(currentRole == .host ? liveStreamHostResponseReportString : liveStreamAudienceInviteTimeOutReportString, paramsDict: reportData)
             for delegate in eventDelegates.allObjects {
                 if currentRole == .host {
                     delegate.onIncomingCohostInviteResponseTimeOut?(invitees: invitees, data: data)
                 } else {
+                    //FIXME: 观众自己的申请无响应超时
                     delegate.onIncomingCohostRequestResponseTimeOut?(invitees: invitees, data: data)
                 }
             }

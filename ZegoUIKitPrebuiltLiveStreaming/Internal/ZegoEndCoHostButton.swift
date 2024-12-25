@@ -26,7 +26,7 @@ class ZegoEndCoHostButton: UIButton {
     }
     
     @objc func buttonClick() {
-        guard let userID = ZegoUIKit.shared.localUserInfo?.userID else { return }
+        guard (ZegoUIKit.shared.localUserInfo?.userID) != nil else { return }
         self.delegate?.onEndCoHostButtonDidClick()
     }
 }

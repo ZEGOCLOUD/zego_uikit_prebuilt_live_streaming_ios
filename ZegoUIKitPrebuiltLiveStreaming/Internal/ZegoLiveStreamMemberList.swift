@@ -116,7 +116,12 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
     
     func agreeButtonDidClick(_ user: ZegoUIKitUser) {
         guard let userID = user.userID else { return }
-        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.acceptInvitation(userID, data: nil, callback: nil)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.acceptInvitation(userID, data: nil, callback: { data in
+            let callID: String = data?["invitationID"] as? String ?? ""
+            let reportData = ["call_id": callID as AnyObject,
+                              "action": "accept" as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamHostResponseReportString, paramsDict: reportData)
+        })
         self.requestCoHostList = self.requestCoHostList?.filter{
             return $0.userID != user.userID
         }
@@ -127,7 +132,12 @@ extension ZegoLiveStreamMemberList: ZegoMemberListDelegate, ZegoLiveStreamMember
     
     func disAgreeButtonDidClick(_ user: ZegoUIKitUser) {
         guard let userID = user.userID else { return }
-        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation(userID, data: nil)
+        ZegoLiveStreamingManager.shared.getSignalingPlugin()?.refuseInvitation(userID, data: nil,callback: { data in
+            let callID: String = data?["invitationID"] as? String ?? ""
+            let reportData = ["call_id": callID as AnyObject,
+                              "action": "refuse" as AnyObject]
+            ReportUtil.sharedInstance().reportEvent(liveStreamHostResponseReportString, paramsDict: reportData)
+        })
         self.requestCoHostList = self.requestCoHostList?.filter{
             return $0.userID != user.userID
         }

@@ -201,11 +201,17 @@ class PKVideoView: UIView {
     func startPlayRemoteAudioVideo(_ viewMode: ZegoUIKitVideoFillMode) {
         guard let streamID = streamID else { return }
         ZegoUIKit.shared.startPlayStream(streamID, renderView: self, videoModel: viewMode)
+        let callID = ZegoLiveStreamingManager.shared.callID
+        let reportData = ["call_id": callID as AnyObject,"stream_id": self.streamID as AnyObject,]
+        ReportUtil.sharedInstance().reportEvent(liveStreamPKStartPlayStreamReportString, paramsDict: reportData)
     }
     
     func stopPlayRemoteAudioVideo() {
         guard let streamID = streamID else { return }
         ZegoUIKit.shared.stopPlayStream(streamID)
+        let callID = ZegoLiveStreamingManager.shared.callID
+        let reportData = ["call_id": callID as AnyObject,"stream_id": self.streamID as AnyObject,]
+        ReportUtil.sharedInstance().reportEvent(liveStreamPKStartPlayStreamFinishReportString, paramsDict: reportData)
     }
     
     func mutePlayAudio(_ mute: Bool) {

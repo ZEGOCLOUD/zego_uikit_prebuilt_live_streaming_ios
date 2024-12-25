@@ -37,7 +37,7 @@ public class ZegoMemberButton: UIButton {
         }
     }
     var config: ZegoUIKitPrebuiltLiveStreamingConfig = ZegoUIKitPrebuiltLiveStreamingConfig()
-    
+    var roomID: String = ""
     private let help: ZegoMemberButton_Help = ZegoMemberButton_Help()
     
 
@@ -156,6 +156,7 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
         if reason == .logined {
             let number: Int = ZegoUIKit.shared.getAllUsers().count
             self.memberButton?.setTitle(String(format: "%d", number), for: .normal)
+            self.memberButton?.roomID = roomID
         }
     }
     
@@ -191,13 +192,19 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                 }
             } else {
                 if isCoHost {
-                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.removeCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.removeCoHost.rawValue, data: nil, notificationConfig: nil) {[weak self] data in
                         guard let data = data else { return }
+                        guard let self = self else { return }
                         if data["code"] as! Int == 0 {
                            
                         } else {
                             
                         }
+                        let callID: String = data["callID"] as? String ?? ""
+                        let reportData = ["call_id": callID as AnyObject,
+                                          "room_id": self.memberButton?.roomID as AnyObject,
+                                          "cohost_id": userID as AnyObject]
+                        ReportUtil.sharedInstance().reportEvent(liveStreamHostStopCo_HostReportString, paramsDict: reportData)
                     }
                     memberButton.delegate?.memberListDidClickRemoveCoHost(currentUser)
                 } else {
@@ -210,13 +217,19 @@ class ZegoMemberButton_Help: NSObject, ZegoUIKitEventHandle, ZegoLiveStreamMembe
                         }
                     }
                     
-                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.inviteToCoHost.rawValue, data: nil, notificationConfig: nil) { data in
+                    ZegoLiveStreamingManager.shared.getSignalingPlugin()?.sendInvitation([userID], timeout: 60, type: ZegoInvitationType.inviteToCoHost.rawValue, data: nil, notificationConfig: nil) {[weak self] data in
+                        guard let self = self else { return }
                         guard let data = data else { return }
                         if data["code"] as! Int == 0 {
                             memberButton.delegate?.memberListDidClickInvitate(currentUser)
                         } else {
                             ZegoLiveStreamTipView.showWarn(memberButton.config.translationText.inviteCoHostFailedToast, onView: self.memberButton?.controller?.view)
                         }
+                        let callID: String = data["callID"] as? String ?? ""
+                        let reportData = ["call_id": callID as AnyObject,
+                                     "audience_id": userID as AnyObject,
+                                     "error": data["code"] as AnyObject]
+                        ReportUtil.sharedInstance().reportEvent(liveStreamHostInviteReportString, paramsDict: reportData)
                     }
                 }
             }

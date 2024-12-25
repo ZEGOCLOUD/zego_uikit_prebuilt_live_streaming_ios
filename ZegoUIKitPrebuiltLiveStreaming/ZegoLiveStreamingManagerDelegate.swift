@@ -11,7 +11,7 @@ import ZegoUIKit
 @objc public protocol ZegoLiveStreamingManagerDelegate: AnyObject {
     
     @objc optional func onIncomingCohostRequest(inviter: ZegoUIKitUser)
-    @objc optional func onIncomingInviteToCohostRequest(inviter: ZegoUIKitUser, invitationID: String)
+    @objc optional func onIncomingInviteToCohostRequest(inviter: ZegoUIKitUser, invitationID: String, data: String?)
     @objc optional func onIncomingRemoveCohostRequest(inviter: ZegoUIKitUser)
     @objc optional func onIncomingAcceptCohostRequest(invitee: ZegoUIKitUser, data: String?)
     @objc optional func onIncomingCancelCohostRequest(inviter: ZegoUIKitUser, data: String?)
